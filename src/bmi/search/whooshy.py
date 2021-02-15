@@ -12,10 +12,8 @@ import whoosh
 from whoosh.fields import Schema, TEXT, ID
 from whoosh.formats import Format
 from whoosh.qparser import QueryParser
-from bmi.search.search import Searcher
-from bmi.search.index import Index
-from bmi.search.index import Builder
-from bmi.search.index import FreqVector
+from search import Searcher
+from index import Index, Builder, FreqVector
 
 # A schema in Whoosh is the set of possible fields in a document in
 # the search space. We just define a simple 'Document' schema
@@ -25,13 +23,17 @@ Document = Schema(
         )
 
 class WhooshBuilder(Builder):
+    pass
     ## TODO ##
     # Your code here #
 
 class WhooshIndex(Index):
-    ## TODO ##
-    # Your code here #
+    index = None
+
+    def __init__(self, index_path):
+        self.index = Index()
 
 class WhooshSearcher(Searcher):
+    pass
     ## TODO ##
     # Your code here #

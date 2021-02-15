@@ -31,9 +31,11 @@ class Searcher(ABC):
 
 
 class VSMDotProductSearcher(Searcher):
+    pass
     ## TODO ##
     # Your code here #
 
 class VSMCosineSearcher(VSMDotProductSearcher):
+    pass
     ## TODO ##
     # Your code here #

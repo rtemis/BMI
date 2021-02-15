@@ -18,14 +18,14 @@ class TermFreq():
 
 
 class Index:
-    def __init__(self, ...):
-        ## TODO ##
-        # Your code here #
+    def __init__(self):
+        self.path = ""
+        self.title = ""
+        self.content = ""
 
     def doc_freq(self, term):
         pass
-        ## TODO ##
-        # Your code here #
+
     def all_terms(self):
         pass
     
@@ -35,18 +35,21 @@ class Index:
     def total_freq(self, term):
         pass
 
+    def term_freq(self, term, doc_id):
+        pass
+
+    def doc_path(self, doc_id):
+        pass
+
     def doc_vector(self, doc_id):
         pass
 
     def postings(self, word):
         pass
 
-    def TODO(self, ...):
-        pass
-        ## TODO ##
-        # Your code here #
 
 
 class Builder:
+    pass
         ## TODO ##
         # Your code here #
