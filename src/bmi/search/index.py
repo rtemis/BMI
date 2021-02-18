@@ -43,6 +43,7 @@ class Index:
     def term_freq(self, term, doc_id):
         pass
 
+
     def doc_path(self, doc_id):
         pass
 

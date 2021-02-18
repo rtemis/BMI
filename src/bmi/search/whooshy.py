@@ -18,9 +18,9 @@ from index import Index, Builder, TermFreq
 # A schema in Whoosh is the set of possible fields in a document in
 # the search space. We just define a simple 'Document' schema
 Document = Schema(
-        ## TODO ##
-        # Your code here #
-        )
+        path=ID(stored=True),
+        content=TEXT(vector=Format)
+    )
 
 class WhooshBuilder(Builder):
     pass
@@ -43,12 +43,16 @@ class WhooshIndex(Index):
 
         return info
     
+    # Concatenate the word with its frequency???
     def all_terms_with_freq(self):
+        # for each : term freq
         return self.terms         
 
+    # Frequency of a word in all documentss
     def total_freq(self, term):
         pass
 
+    # Frequency of a single word in a document 
     def term_freq(self, term, doc_id):
         vector = index.doc_vector(doc_id)
         nTerms = vector.size()
@@ -59,6 +63,7 @@ class WhooshIndex(Index):
          print(" Frequency of term in doc_id = " + str(doc_id) + " - " + index.doc_path(doc_id) + ": " + i)
         pass
 
+
     def doc_path(self, doc_id):
         pass
 
@@ -66,7 +71,9 @@ class WhooshIndex(Index):
         pass
 
     def postings(self, word):
-        pass
+
+        return indexreader.postings().items_as()
+        
 
 
 class WhooshSearcher(Searcher):
