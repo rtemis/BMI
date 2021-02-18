@@ -50,6 +50,13 @@ class WhooshIndex(Index):
         pass
 
     def term_freq(self, term, doc_id):
+        vector = index.doc_vector(doc_id)
+        nTerms = vector.size()
+        i = 0
+        for f in vector:
+            if f==term:
+                i+=
+         print(" Frequency of term in doc_id = " + str(doc_id) + " - " + index.doc_path(doc_id) + ": " + i)
         pass
 
     def doc_path(self, doc_id):
