@@ -21,7 +21,6 @@ import shutil
 
 Document = Schema(
         path=ID(stored=True),
-        title=TEXT(stored=True),
         content=TEXT(vector=Format))
 
 def build_index(dir, urls):
@@ -47,7 +46,7 @@ def examine(dir, term, docid, n):
     print("Total frequency of '", term, "':", reader.frequency("content", term))
     print("Nº documents containing '", term, "':", reader.doc_frequency("content", term))
     raw_vec = reader.vector(docid, "content")
-    raw_vec.skip_to("probability")
+    raw_vec.skip_to(term)
     print("Frequency of '", raw_vec.id(), "' in document", docid, reader.stored_fields(docid)['path'], ":", raw_vec.value_as("frequency"))
     print("Top", n, "most frequent terms in document", docid, reader.stored_fields(docid)['path']) 
     vec = reader.vector(docid, "content").items_as("frequency")

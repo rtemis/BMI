@@ -18,10 +18,14 @@ class TermFreq():
 
 
 class Index:
-    def __init__(self):
-        self.path = ""
-        self.title = ""
-        self.content = ""
+    def __init__(self, index_path = "", content = ""):
+        # The Index path is passed as a variable upon creation
+        self.index_path = index_path
+        # Content can be left blank
+        self.content = content
+        # Terms is a list of objects of type TermFreq
+        self.terms = []
+
 
     def doc_freq(self, term):
         pass

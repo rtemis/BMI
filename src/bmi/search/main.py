@@ -8,25 +8,22 @@
  se ciñe a las actividades docentes de dicha asignatura.
 """
 import os
+import shutil
 import time
 from search import VSMDotProductSearcher, VSMCosineSearcher
 from whooshy import WhooshBuilder, WhooshIndex, WhooshSearcher
 
 def main():
-    index_root_dir = "./index/index_"
-    test_collection ("./data/toy/", index_root_dir + "toy", "cc", "aa dd")
+    index_root_dir = "./index/"
     collections_root_dir = "./data/collections/"
+    test_collection (collections_root_dir + "toy", index_root_dir + "toy", "cc", "aa dd")
     test_collection (collections_root_dir + "urls.txt", index_root_dir + "urls", "wikipedia", "information probability")
     test_collection (collections_root_dir + "docs1k.zip", index_root_dir + "docs", "seat", "obama family tree")
 
 def clear (index_path: str):
-    if not os.path.isdir(index_path):
-      print("Creating " + index_path)
-      os.mkdir(index_path)
-    for f in os.listdir(index_path):
-      p = os.path.join(index_path, f)
-      if os.path.isfile(p):
-        os.remove(p)
+    if os.path.exists(index_path): shutil.rmtree(index_path)
+    else: print("Creating " + index_path)
+    os.makedirs(index_path)
 
 def test_collection(collection_path: str, index_path: str, word: str, query: str):
     start_time = time.time()

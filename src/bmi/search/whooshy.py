@@ -13,7 +13,7 @@ from whoosh.fields import Schema, TEXT, ID
 from whoosh.formats import Format
 from whoosh.qparser import QueryParser
 from search import Searcher
-from index import Index, Builder, FreqVector
+from index import Index, Builder, TermFreq
 
 # A schema in Whoosh is the set of possible fields in a document in
 # the search space. We just define a simple 'Document' schema
@@ -28,10 +28,39 @@ class WhooshBuilder(Builder):
     # Your code here #
 
 class WhooshIndex(Index):
-    index = None
+    def __init__(self, path):
+        Index.__init__(self, index_path=path) 
+    
+    # Doc 
+    def doc_freq(self, term):
+        pass
 
-    def __init__(self, index_path):
-        self.index = Index()
+    # All terms returns only the term info. 
+    def all_terms(self):
+        info = []
+        for i in self.terms:
+            info.append(i[0])
+
+        return info
+    
+    def all_terms_with_freq(self):
+        return self.terms         
+
+    def total_freq(self, term):
+        pass
+
+    def term_freq(self, term, doc_id):
+        pass
+
+    def doc_path(self, doc_id):
+        pass
+
+    def doc_vector(self, doc_id):
+        pass
+
+    def postings(self, word):
+        pass
+
 
 class WhooshSearcher(Searcher):
     pass
