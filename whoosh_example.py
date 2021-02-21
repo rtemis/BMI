@@ -52,18 +52,7 @@ def examine(dir, term, docid, n):
     vec = reader.vector(docid, "content").items_as("frequency")
     for p in sorted(vec, key=lambda x: x[1], reverse=True)[0:n]:
         print("\t", p)
-    print()
-    info = []
-    for i in reader.all_terms():
-        if "\\x" not in str(i[1]):
-            info.append(i[1])
-    x = []
-    for term in info:
-        x.append((term, reader.frequency("content", term)))
-
-    for y in x:
-        print(y)
-        
+    print() 
 
 urls = ["https://en.wikipedia.org/wiki/Simpson's_paradox", 
         "https://en.wikipedia.org/wiki/Bias",
@@ -75,4 +64,4 @@ build_index(dir, urls)
 
 search(dir, "probability")
 
-examine(dir, "self", 0, 5)
+examine(dir, "probability", 0, 5)

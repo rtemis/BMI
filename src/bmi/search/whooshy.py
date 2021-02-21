@@ -31,17 +31,14 @@ class WhooshIndex(Index):
     def __init__(self, path):
         self.reader = whoosh.index.open_dir(path).reader()
 
-    # Doc 
-    def doc_freq(self, term):
-        pass
-
     # All terms returns only the term info. 
     def all_terms(self):
         info = []
         for i in self.reader.all_terms():
             if "\\x" not in str(i[1]):
-                info.append(str(i[1]))
+                info.append(i[1])
 
+        # Returning binary
         return info
     
     # Concatenate the word with its frequency???
@@ -71,15 +68,18 @@ class WhooshIndex(Index):
         #         i += 1 
         # pass
 
+    # Doc 
+    def doc_freq(self, term):
+        return self.reader.doc_frequency("content", term)
+
     # Returns path of document given by id = doc_id
     def doc_path(self, doc_id):
         return self.reader.stored_fields(doc_id)['path']
 
     #Given a document returns an array of the terms associated to their frequency 
     def doc_vector(self, doc_id):
+        return self.reader.vector(doc_id, "content").items_as("frequency")
 
-        return [1,3]
-        
     #Given a term matches every document with the frequncy of that term
     def postings(self, word):
         return self.reader.postings("content", word).items_as("frequency")
