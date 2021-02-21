@@ -53,14 +53,12 @@ class WhooshIndex(Index):
         pass
 
     # Frequency of a single word in a document 
-    def term_freq(self, term, doc_id):
-        vector = index.doc_vector(doc_id)
-        nTerms = vector.size()
+    def term_freq(self, term, doc_id): 
+        vector = index.doc_vector(doc_id)   #probably this is wrong, it's just an idea
         i = 0
         for f in vector:
             if f==term:
-                i+=
-         print(" Frequency of term in doc_id = " + str(doc_id) + " - " + index.doc_path(doc_id) + ": " + i)
+                i+=  
         pass
 
 
