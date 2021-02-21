@@ -29,8 +29,8 @@ class WhooshBuilder(Builder):
 
 class WhooshIndex(Index):
     def __init__(self, path):
-        Index.__init__(self, index_path=path) 
-    
+        self.reader = whoosh.index.open_dir(path).reader()
+
     # Doc 
     def doc_freq(self, term):
         pass
@@ -38,39 +38,51 @@ class WhooshIndex(Index):
     # All terms returns only the term info. 
     def all_terms(self):
         info = []
-        for i in self.terms:
-            info.append(i[0])
+        for i in self.reader.all_terms():
+            if "\\x" not in str(i[1]):
+                info.append(str(i[1]))
 
         return info
     
     # Concatenate the word with its frequency???
     def all_terms_with_freq(self):
-        # for each : term freq
-        return self.terms         
+        term_freq = []
+        info = self.all_terms()
+
+        for term in info:
+            term_freq.append((term, self.reader.frequency("content", term)))
+        
+        return term_freq   
 
     # Frequency of a word in all documentss
     def total_freq(self, term):
-        pass
+        return self.reader.frequency("content", term)
 
     # Frequency of a single word in a document 
     def term_freq(self, term, doc_id): 
-        vector = index.doc_vector(doc_id)   #probably this is wrong, it's just an idea
-        i = 0
-        for f in vector:
-            if f==term:
-                i+=  
-        pass
+        vector = self.reader.vector(doc_id, "content")
+        vector.skip_to(term)
+        return vector.value_as("frequency")
 
+        # vector = self.doc_vector(doc_id)   #probably this is wrong, it's just an idea
+        # i = 0
+        # for f in vector:
+        #     if f == term:
+        #         i += 1 
+        # pass
 
+    # Returns path of document given by id = doc_id
     def doc_path(self, doc_id):
-        pass
+        return self.reader.stored_fields(doc_id)['path']
 
+    #Given a document returns an array of the terms associated to their frequency 
     def doc_vector(self, doc_id):
-        pass
 
+        return [1,3]
+        
+    #Given a term matches every document with the frequncy of that term
     def postings(self, word):
-
-        return indexreader.postings().items_as()
+        return self.reader.postings("content", word).items_as("frequency")
         
 
 
