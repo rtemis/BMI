@@ -54,6 +54,7 @@ def examine(dir, term, docid, n):
         print("\t", p)
     print() 
 
+
 urls = ["https://en.wikipedia.org/wiki/Simpson's_paradox", 
         "https://en.wikipedia.org/wiki/Bias",
         "https://en.wikipedia.org/wiki/Entropy"]

@@ -14,6 +14,8 @@ from whoosh.formats import Format
 from whoosh.qparser import QueryParser
 from search import Searcher
 from index import Index, Builder, TermFreq
+from bs4 import BeautifulSoup
+from urllib.request import urlopen
 
 # A schema in Whoosh is the set of possible fields in a document in
 # the search space. We just define a simple 'Document' schema
@@ -23,9 +25,16 @@ Document = Schema(
     )
 
 class WhooshBuilder(Builder):
-    pass
-    ## TODO ##
-    # Your code here #
+    def __init__(self, directory):
+        self.writer = whoosh.index.create_in(directory, Document).writer()
+    
+    def build(self, collection):
+        for doc in collection:
+            self.writer.add_document(path=doc, content=BeautifulSoup(urlopen(doc).read(), "lxml").text)
+        self.commit()
+
+    def commit(self):
+        self.writer.commit()
 
 class WhooshIndex(Index):
     def __init__(self, path):
@@ -61,13 +70,6 @@ class WhooshIndex(Index):
         vector.skip_to(term)
         return vector.value_as("frequency")
 
-        # vector = self.doc_vector(doc_id)   #probably this is wrong, it's just an idea
-        # i = 0
-        # for f in vector:
-        #     if f == term:
-        #         i += 1 
-        # pass
-
     # Doc 
     def doc_freq(self, term):
         return self.reader.doc_frequency("content", term)
@@ -76,17 +78,18 @@ class WhooshIndex(Index):
     def doc_path(self, doc_id):
         return self.reader.stored_fields(doc_id)['path']
 
-    #Given a document returns an array of the terms associated to their frequency 
+    # Given a document returns an array of the terms associated to their frequency 
     def doc_vector(self, doc_id):
         return self.reader.vector(doc_id, "content").items_as("frequency")
 
-    #Given a term matches every document with the frequncy of that term
+    # Given a term matches every document with the frequncy of that term
     def postings(self, word):
         return self.reader.postings("content", word).items_as("frequency")
         
 
 
 class WhooshSearcher(Searcher):
-    pass
-    ## TODO ##
-    # Your code here #
+
+    def __init__(self, path):
+        self.searcher = whoosh.index.open_dir(path).searcher()
+
