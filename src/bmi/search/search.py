@@ -31,11 +31,16 @@ class Searcher(ABC):
 
 
 class VSMDotProductSearcher(Searcher):
-    pass
-    ## TODO ##
-    # Your code here #
+
+    def __init__(self, path):
+        self.index = #whoosh.index.open_dir(path)
+        self.searcher = #self.index.searcher()
+        self.parser = #QueryParser("content", schema=self.index.schema)
+
 
 class VSMCosineSearcher(VSMDotProductSearcher):
-    pass
-    ## TODO ##
-    # Your code here #
+
+    def __init__(self, path):
+        self.index = 
+        self.searcher = 
+        self.parser = 

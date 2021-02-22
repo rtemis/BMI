@@ -16,6 +16,8 @@ from search import Searcher
 from index import Index, Builder, TermFreq, DocVector
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
+import os, os.path
+import shutil
 
 # A schema in Whoosh is the set of possible fields in a document in
 # the search space. We just define a simple 'Document' schema
@@ -26,12 +28,17 @@ Document = Schema(
 
 class WhooshBuilder(Builder):
     def __init__(self, directory):
+        if os.path.exists(directory): shutil.rmtree(directory)
+        os.makedirs(directory)
         self.writer = whoosh.index.create_in(directory, Document).writer()
     
     def build(self, collection):
-        for doc in collection:
-            self.writer.add_document(path=doc, content=BeautifulSoup(urlopen(doc).read(), "lxml").text)
-        self.commit()
+        files = os.listdir(collection)
+        for doc in files:
+            fp = open(collection + '/' + doc, "r")
+            self.writer.add_document(path=doc, content=fp.read())
+            fp.close()
+            #self.writer.add_document(path=doc, content=BeautifulSoup(urlopen(doc).read(), "lxml").text)
 
     def commit(self):
         self.writer.commit()
@@ -45,7 +52,7 @@ class WhooshIndex(Index):
         info = []
         for i in self.reader.all_terms():
             if "\\x" not in str(i[1]):
-                info.append(i[1])
+                info.append(i[1].decode('ascii'))
 
         # Returning binary like in the given example
         return info
@@ -83,7 +90,7 @@ class WhooshIndex(Index):
         vec = DocVector()
         for i in self.reader.vector(doc_id, "content").items_as("frequency"):
             vec.vector.append(TermFreq(i))
-        return vec
+        return vec.vector
 
 
     # Given a term matches every document with the frequncy of that term

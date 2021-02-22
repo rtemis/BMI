@@ -75,7 +75,7 @@ def test_read(index, word):
     # this method provides a vector of tuples
     # for each doc: (term, freq), encapsulated in a TermFreq object (in module index)
     vector = index.doc_vector(doc_id)
-    initialTerm = vector.size() / 2
+    initialTerm = len(vector) / 2
     nTerms = 5
     print("  A few term frequencies for doc_id = " + str(doc_id) + " - " + index.doc_path(doc_id) + ": ")
     i = 0
