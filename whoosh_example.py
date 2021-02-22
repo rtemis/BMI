@@ -40,6 +40,7 @@ def search(dir, query):
         print(score, "\t", index.reader().stored_fields(docid)['path'])
     print()
 
+
 def examine(dir, term, docid, n):
     reader = whoosh.index.open_dir(dir).reader()
     print("Total nº of documents in the collection:", reader.doc_count())

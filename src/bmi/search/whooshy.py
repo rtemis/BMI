@@ -13,7 +13,7 @@ from whoosh.fields import Schema, TEXT, ID
 from whoosh.formats import Format
 from whoosh.qparser import QueryParser
 from search import Searcher
-from index import Index, Builder, TermFreq
+from index import Index, Builder, TermFreq, DocVector
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 
@@ -80,7 +80,11 @@ class WhooshIndex(Index):
 
     # Given a document returns an array of the terms associated to their frequency 
     def doc_vector(self, doc_id):
-        return self.reader.vector(doc_id, "content").items_as("frequency")
+        vec = DocVector()
+        for i in self.reader.vector(doc_id, "content").items_as("frequency"):
+            vec.vector.append(TermFreq(i))
+        return vec
+
 
     # Given a term matches every document with the frequncy of that term
     def postings(self, word):
@@ -91,5 +95,14 @@ class WhooshIndex(Index):
 class WhooshSearcher(Searcher):
 
     def __init__(self, path):
-        self.searcher = whoosh.index.open_dir(path).searcher()
+        self.index = whoosh.index.open_dir(path)
+        self.searcher = self.index.searcher()
+        self.parser = QueryParser("content", schema=self.index.schema)
+
+    def search(self, query, cutoff):
+        tuples = [] 
+        for path, score in self.searcher.search(self.parser.parse(query), limit=cutoff).items():
+            tuples.append((self.index.reader().stored_fields(path)['path'], score))
+        return tuples
+
 

@@ -17,6 +17,12 @@ class TermFreq():
     def freq(self):
         return self.info[1]
 
+class DocVector():
+    def __init__(self):
+        self.vector = []
+    def size(self):
+        return len(self.vector) 
+
 
 class Index:
     def __init__(self, index_path = "", content = ""):
@@ -56,6 +62,14 @@ class Index:
 
 
 class Builder:
-    pass
-        ## TODO ##
-        # Your code here #
+
+    def __init__(self, path, collection):
+        pass
+
+    def build(self, collection):
+        pass
+
+    def commit(self):
+        pass
+
+
