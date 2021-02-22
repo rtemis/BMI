@@ -47,7 +47,7 @@ class WhooshIndex(Index):
             if "\\x" not in str(i[1]):
                 info.append(i[1])
 
-        # Returning binary
+        # Returning binary like in the given example
         return info
     
     # Concatenate the word with its frequency???
@@ -70,7 +70,7 @@ class WhooshIndex(Index):
         vector.skip_to(term)
         return vector.value_as("frequency")
 
-    # Doc 
+    # Returns the total number of documents that contain "term"
     def doc_freq(self, term):
         return self.reader.doc_frequency("content", term)
 

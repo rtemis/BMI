@@ -33,29 +33,29 @@ class Index:
         # Terms is a list of objects of type TermFreq
         self.terms = []
 
-
+    # Returns the total number of documents that contain "term"
     def doc_freq(self, term):
         pass
-
+    # All terms returns only the term info
     def all_terms(self):
         pass
-    
+    # Concatenate the word with its frequency
     def all_terms_with_freq(self):
         pass
-
+    # Frequency of a word in all documents
     def total_freq(self, term):
         pass
-
+     # Frequency of a single word in a document
     def term_freq(self, term, doc_id):
         pass
 
-
+    # Returns path of document given by id = doc_id
     def doc_path(self, doc_id):
         pass
-
+    # Given a document returns an array of the terms associated to their frequency
     def doc_vector(self, doc_id):
         pass
-
+     # Given a term matches every document with the frequncy of that term
     def postings(self, word):
         pass
 
