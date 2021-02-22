@@ -17,6 +17,9 @@ def tf(freq):
 def idf(df, n):
     return math.log((n + 1) / (df + 0.5))
 
+class Parser():
+    def parse(self, query):
+        return query.lower().split(" ")
 
 """
     This is an abstract class for the search engines
@@ -32,15 +35,19 @@ class Searcher(ABC):
 
 class VSMDotProductSearcher(Searcher):
 
-    def __init__(self, path):
-        self.index = #whoosh.index.open_dir(path)
-        self.searcher = #self.index.searcher()
-        self.parser = #QueryParser("content", schema=self.index.schema)
+    def __init__(self, engine):
+        self.index = engine.index
+        self.parser = Parser()
+
+    def search(self, query, cutoff):
+        pass
 
 
 class VSMCosineSearcher(VSMDotProductSearcher):
 
-    def __init__(self, path):
-        self.index = 
-        self.searcher = 
-        self.parser = 
+    def __init__(self, engine):
+        self.index = engine.index 
+        self.parser = Parser()
+
+    def search(self, query, cutoff):
+        pass
