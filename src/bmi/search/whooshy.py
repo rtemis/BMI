@@ -12,7 +12,7 @@ import whoosh
 from whoosh.fields import Schema, TEXT, ID
 from whoosh.formats import Format
 from whoosh.qparser import QueryParser
-from search import Searcher
+from search import Searcher, tf, idf
 from index import Index, Builder, TermFreq, DocVector
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
@@ -46,6 +46,11 @@ class WhooshBuilder(Builder):
 class WhooshIndex(Index):
     def __init__(self, path):
         self.reader = whoosh.index.open_dir(path).reader()
+        # fp = open(path + '/modulos.txt', 'w')
+        # for doc in range(0,self.ndocs()):
+        #     tfidf = 0
+        #     for t in self.all_terms():
+        #         tfidf += tf(self.term_freq(term, doc)) * idf(self.doc_freq(term), self.ndocs()) 
 
     # All terms returns only the term info. 
     def all_terms(self):
@@ -75,7 +80,9 @@ class WhooshIndex(Index):
     def term_freq(self, term, doc_id): 
         vector = self.reader.vector(doc_id, "content")
         vector.skip_to(term)
-        return vector.value_as("frequency")
+        if vector.id() == term:
+            return vector.value_as("frequency")
+        return 0
 
     # Returns the total number of documents that contain "term"
     def doc_freq(self, term):
@@ -97,6 +104,8 @@ class WhooshIndex(Index):
     def postings(self, word):
         return self.reader.postings("content", word).items_as("frequency")
         
+    def ndocs(self):
+        return self.reader.doc_count_all()
 
 
 class WhooshSearcher(Searcher):

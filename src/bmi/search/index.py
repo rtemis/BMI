@@ -59,6 +59,9 @@ class Index:
     def postings(self, word):
         pass
 
+    def ndocs(self):
+        pass
+
 
 
 class Builder:
