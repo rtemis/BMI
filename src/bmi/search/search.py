@@ -66,6 +66,7 @@ class VSMDotProductSearcher(Searcher):
 
 
 class VSMCosineSearcher(VSMDotProductSearcher):
-
+    for doc in range(0,self.index.ndocs()):
+        self.mod(doc) = self.index.nterms(doc)
     def score(self, term, doc):
         return ( tf(self.index.term_freq(term, doc)) * idf(self.index.doc_freq(term), self.index.ndocs()) )/ self.mod(doc)

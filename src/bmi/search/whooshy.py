@@ -106,6 +106,9 @@ class WhooshIndex(Index):
         
     def ndocs(self):
         return self.reader.doc_count_all()
+    
+    def nterms(self, doc_id):
+        pass
 
 
 class WhooshSearcher(Searcher):
