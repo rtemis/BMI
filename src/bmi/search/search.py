@@ -24,6 +24,14 @@ def get_mod(docid):
     fp.close()
     return details[1]
 
+def set_mod(self, doc):
+        
+        d = 0
+        for q in self.reader.vector(doc_id, "content"):
+            d += ((idf(self.index.doc_freq(q), self.index.ndocs()) * tf(self.index.term_freq(q, doc)))**2)
+        d = d**(1/2)
+        return d
+
 class Parser():
     def parse(self, query):
         return query.lower().split(" ")
@@ -46,7 +54,11 @@ class VSMDotProductSearcher(Searcher):
         self.index = engine
         self.parser = Parser()
 
-        fp = open()
+        fp = open(engine.path + '/index/modulo.txt', 'w')
+        for doc in range(0,self.index.ndocs()):
+            fp.write(doc +'\t'+ set_mod(doc))
+        fp.close()
+        
 
     def search(self, query, cutoff):
         tuples = []
@@ -66,13 +78,6 @@ class VSMDotProductSearcher(Searcher):
 
 
 class VSMCosineSearcher(VSMDotProductSearcher):
-    def mod(self, doc):
-        query_terms = self.parser.parse(query)
-        d = 0
-        for q in query_terms:
-            d = d + ((idf(self.index.doc_freq(q), self.index.ndocs()) * tf(self.index.term_freq(q, doc)))**2)
-        d = d**(1/2)
-        return d
     def score(self, term, doc):
         return ( tf(self.index.term_freq(term, doc)) * idf(self.index.doc_freq(term), self.index.ndocs()) ) / self.mod(doc)
     

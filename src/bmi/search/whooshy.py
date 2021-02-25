@@ -46,6 +46,7 @@ class WhooshBuilder(Builder):
 class WhooshIndex(Index):
     def __init__(self, path):
         self.reader = whoosh.index.open_dir(path).reader()
+        self.indexpath=path
         # fp = open(path + '/modulos.txt', 'w')
         # for doc in range(0,self.ndocs()):
         #     tfidf = 0
