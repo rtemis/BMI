@@ -73,7 +73,7 @@ class WhooshIndex(Index):
         
         return term_freq   
 
-    # Frequency of a word in all documentss
+    # Frequency of a word in all documents
     def total_freq(self, term):
         return self.reader.frequency("content", term)
 
