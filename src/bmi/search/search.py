@@ -18,19 +18,25 @@ def tf(freq):
 def idf(df, n):
     return math.log2((n + 1) / (df + 0.5))
 
-def get_mod(docid):
-    fp = open(os.path.dirname() + '/index/modulo.txt', 'r')
-    details = fp.readline(docid).split(' ')
-    fp.close()
-    return details[1]
+def get_mod(index, docid):
+    fp = open(index.index_path + '/modulo.txt', 'r')
+    details = fp.readlines()
+    mod = float(details[docid].split('\t')[1])
 
-def set_mod(self, doc):
-        
+    fp.close()
+    return mod
+
+def set_mod(index):
+    fp = open(index.index_path + '/modulo.txt', 'w')
+    for doc in range(0, index.ndocs()):
         d = 0
-        for q in self.reader.vector(doc_id, "content"):
-            d += ((idf(self.index.doc_freq(q), self.index.ndocs()) * tf(self.index.term_freq(q, doc)))**2)
+        for q in index.all_terms():
+            d += ((idf(index.doc_freq(q), index.ndocs()) * tf(index.term_freq(q, doc)))**2)
         d = d**(1/2)
-        return d
+        fp.write(str(doc) +'\t'+ str(d) + '\n')
+    fp.close()
+
+
 
 class Parser():
     def parse(self, query):
@@ -53,12 +59,9 @@ class VSMDotProductSearcher(Searcher):
     def __init__(self, engine):
         self.index = engine
         self.parser = Parser()
+        # Create a file to search for the modulo
+        set_mod(self.index)
 
-        fp = open(engine.path + '/index/modulo.txt', 'w')
-        for doc in range(0,self.index.ndocs()):
-            fp.write(doc +'\t'+ set_mod(doc))
-        fp.close()
-        
 
     def search(self, query, cutoff):
         tuples = []
@@ -79,6 +82,6 @@ class VSMDotProductSearcher(Searcher):
 
 class VSMCosineSearcher(VSMDotProductSearcher):
     def score(self, term, doc):
-        return ( tf(self.index.term_freq(term, doc)) * idf(self.index.doc_freq(term), self.index.ndocs()) ) / self.mod(doc)
+        return ( tf(self.index.term_freq(term, doc)) * idf(self.index.doc_freq(term), self.index.ndocs()) ) / get_mod(self.index, doc)
     
 

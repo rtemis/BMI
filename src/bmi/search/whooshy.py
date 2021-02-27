@@ -18,6 +18,7 @@ from bs4 import BeautifulSoup
 from urllib.request import urlopen
 import os, os.path
 import shutil
+import zipfile
 
 # A schema in Whoosh is the set of possible fields in a document in
 # the search space. We just define a simple 'Document' schema
@@ -32,27 +33,37 @@ class WhooshBuilder(Builder):
         os.makedirs(directory)
         self.writer = whoosh.index.create_in(directory, Document).writer()
     
-    def build(self, collection):
+    def build(self, collection):            
+        if os.path.isfile(collection):
+            if '.txt' in collection:
+                fp = open(collection, 'r')
+                urls = fp.readlines()
+                for url in urls:
+                    self.writer.add_document(path=url, content=BeautifulSoup(urlopen(url).read(), "html.parser").text)
+                fp.close()
+                return
+            if '.zip' in collection:
+                archive = zipfile.ZipFile(collection, 'r')
+                for url in archive.namelist():
+                    self.writer.add_document(path=url, content=BeautifulSoup(archive.read(url), "html.parser").text)
+                archive.close()
+                return
         files = os.listdir(collection)
         for doc in files:
             fp = open(collection + '/' + doc, "r")
             self.writer.add_document(path=doc, content=fp.read())
             fp.close()
-            #self.writer.add_document(path=doc, content=BeautifulSoup(urlopen(doc).read(), "lxml").text)
+        return
 
     def commit(self):
         self.writer.commit()
 
 class WhooshIndex(Index):
-    def __init__(self, path):
+    def __init__(self, path):            
         self.reader = whoosh.index.open_dir(path).reader()
-        self.indexpath=path
-        # fp = open(path + '/modulos.txt', 'w')
-        # for doc in range(0,self.ndocs()):
-        #     tfidf = 0
-        #     for t in self.all_terms():
-        #         tfidf += tf(self.term_freq(term, doc)) * idf(self.doc_freq(term), self.ndocs()) 
 
+        self.index_path = path
+        
     # All terms returns only the term info. 
     def all_terms(self):
         info = []
@@ -113,6 +124,7 @@ class WhooshIndex(Index):
 class WhooshSearcher(Searcher):
 
     def __init__(self, path):
+        self.index_path = path
         self.index = whoosh.index.open_dir(path)
         self.searcher = self.index.searcher()
         self.parser = QueryParser("content", schema=self.index.schema)
