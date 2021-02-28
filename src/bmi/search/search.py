@@ -26,7 +26,7 @@ def get_mod(index, docid):
     fp.close()
     return mod
 
-def set_mod(index, doc):
+def set_mod(index, doc, terms):
     # fp = open(index.index_path + '/modulo.txt', 'w')
     # for doc in range(0, index.ndocs()):
     #     d = 0
@@ -36,9 +36,9 @@ def set_mod(index, doc):
     #     fp.write(str(doc) +'\t'+ str(d) + '\n')
     # fp.close()
     d = 0
-    for q in index.all_terms():
+    for q in terms:
         d += math.pow(idf(index.doc_freq(q), index.ndocs()) * tf(index.term_freq(q, doc)), 2)
-    d = math.sqrt(0.5)
+    d = math.sqrt(d)
     return str(doc) +'\t'+ str(d) + '\n'
 
 
@@ -90,9 +90,10 @@ class VSMCosineSearcher(VSMDotProductSearcher):
         self.parser = Parser()
         # Create a file to search for the modulo
         #set_mod(self.index)
+        terms = self.index.all_terms()
         fp = open(self.index.index_path + '/modulo.txt', 'w')
         for doc in range(0, self.index.ndocs()):
-            fp.write(set_mod(self.index, doc))
+            fp.write(set_mod(self.index, doc, terms))
             print(doc)
         fp.close()
 
