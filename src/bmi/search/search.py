@@ -81,10 +81,15 @@ class VSMDotProductSearcher(Searcher):
 
 
 class VSMCosineSearcher(VSMDotProductSearcher):
+    def __init__(self, engine):
+        self.index = engine
+        self.parser = Parser()
+        # Create a file to search for the modulo
+        set_mod(self.index)
 
     def score(self, term, doc):
-        if os.path.exists(self.index.index_path + '/modulo.txt') == False:
-            set_mod(self.index)
+        # if os.path.exists(self.index.index_path + '/modulo.txt') == False:
+        #     set_mod(self.index)
 
         return ( tf(self.index.term_freq(term, doc)) * idf(self.index.doc_freq(term), self.index.ndocs()) ) / get_mod(self.index, doc)
     
