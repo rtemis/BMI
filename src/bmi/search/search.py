@@ -37,8 +37,8 @@ def set_mod(index, doc):
     # fp.close()
     d = 0
     for q in index.all_terms():
-        d += ((idf(index.doc_freq(q), index.ndocs()) * tf(index.term_freq(q, doc)))**2)
-    d = d**(1/2)
+        d += math.pow(idf(index.doc_freq(q), index.ndocs()) * tf(index.term_freq(q, doc)), 2)
+    d = math.sqrt(0.5)
     return str(doc) +'\t'+ str(d) + '\n'
 
 
