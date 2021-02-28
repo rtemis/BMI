@@ -1,6 +1,7 @@
 import whoosh
 from index import Index, Builder, TermFreq, DocVector
-from matplotlib import pyplot
+from matplotlib import pyplot as plt
+
 
 # def allTermsStat(collection): #As parameter p I should pass all the collection of documents
 #     all_term_vec = []
@@ -40,5 +41,7 @@ def term_stats(index):
     plotx = term_stats_sort(index)
 
     ploty = term_stats_docs(index)
-
-    # pyplot.plot(plotx, ploty, )
+    plt.plot([plotx], [ploty])
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.show()
