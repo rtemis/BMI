@@ -35,10 +35,10 @@ def set_mod(index, doc, terms, ndocs):
     #     d = d**(1/2)
     #     fp.write(str(doc) +'\t'+ str(d) + '\n')
     # fp.close()
-    d = 0
-    for q in terms:
-        d += math.pow(idf(index.doc_freq(q), ndocs) * tf(index.term_freq(q, doc)), 2)
-    d = math.sqrt(d)
+    d = math.sqrt(math.fsum([math.pow(idf(index.doc_freq(q), ndocs) * tf(index.term_freq(q, doc)), 2) for q in terms]))
+    # for q in terms:
+    #     d += math.pow(idf(index.doc_freq(q), ndocs) * tf(index.term_freq(q, doc)), 2)
+    # d = math.sqrt(d)
     return str(doc) +'\t'+ str(d) + '\n'
 
 
@@ -94,7 +94,8 @@ class VSMCosineSearcher(VSMDotProductSearcher):
         ndocs = self.index.ndocs()
         fp = open(self.index.index_path + '/modulo.txt', 'w')
         for doc in range(0, ndocs):
-            fp.write(set_mod(self.index, doc, terms, ndocs))
+            d = math.sqrt(math.fsum([math.pow(idf(self.index.doc_freq(q), ndocs) * tf(self.index.term_freq(q, doc)), 2) for q in terms]))
+            fp.write(str(doc) + '\t' + str(d) + '\n')
             print(doc)
         fp.close()
 
