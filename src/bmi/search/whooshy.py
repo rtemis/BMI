@@ -106,10 +106,10 @@ class WhooshIndex(Index):
 
     # Given a document returns an array of the terms associated to their frequency 
     def doc_vector(self, doc_id):
-        vec = DocVector()
+        vector = []
         for i in self.reader.vector(doc_id, "content").items_as("frequency"):
-            vec.vector.append(TermFreq(i))
-        return vec.vector
+            vector.append(TermFreq(i))
+        return vector
 
 
     # Given a term matches every document with the frequncy of that term

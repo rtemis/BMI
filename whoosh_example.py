@@ -28,7 +28,7 @@ def build_index(dir, urls):
     os.makedirs(dir)
     writer = whoosh.index.create_in(dir, Document).writer()
     for url in urls:
-        writer.add_document(path=url, content=BeautifulSoup(urlopen(url).read(), "lxml").text)
+        writer.add_document(path=url, content=BeautifulSoup(urlopen(url).read(), "html.parser").text)
     writer.commit()
 
 def search(dir, query):
@@ -52,7 +52,7 @@ def examine(dir, term, docid, n):
     print("Top", n, "most frequent terms in document", docid, reader.stored_fields(docid)['path']) 
     vec = reader.vector(docid, "content").items_as("frequency")
     for p in sorted(vec, key=lambda x: x[1], reverse=True)[0:n]:
-        print("\t", p)
+        print("\t", p[1])
     print() 
 
 

@@ -26,20 +26,20 @@ def get_mod(index, docid):
     fp.close()
     return mod
 
-def set_mod(index, doc, terms, ndocs):
-    # fp = open(index.index_path + '/modulo.txt', 'w')
-    # for doc in range(0, index.ndocs()):
-    #     d = 0
-    #     for q in index.all_terms():
-    #         d += ((idf(index.doc_freq(q), index.ndocs()) * tf(index.term_freq(q, doc)))**2)
-    #     d = d**(1/2)
-    #     fp.write(str(doc) +'\t'+ str(d) + '\n')
-    # fp.close()
-    d = math.sqrt(math.fsum([math.pow(idf(index.doc_freq(q), ndocs) * tf(index.term_freq(q, doc)), 2) for q in terms]))
-    # for q in terms:
-    #     d += math.pow(idf(index.doc_freq(q), ndocs) * tf(index.term_freq(q, doc)), 2)
-    # d = math.sqrt(d)
-    return str(doc) +'\t'+ str(d) + '\n'
+def set_mod(index):
+    terms = index.all_terms()
+    ndocs = index.ndocs()
+
+    idfval = {}
+    for t in terms: 
+        idfval[t] = idf(index.doc_freq(t), ndocs)
+
+    fp = open(index.index_path + '/modulo.txt', 'w')
+    for doc in range (0, ndocs):
+        d = math.sqrt(math.fsum([math.pow(0 if tup.info[0] not in idfval else tf(tup.info[1]) * idfval[tup.info[0]], 2) for tup in index.doc_vector(doc)]))
+        fp.write(str(doc) +'\t'+ str(d) +'\n')
+    fp.close()
+
 
 
 class Parser():
@@ -71,6 +71,8 @@ class VSMDotProductSearcher(Searcher):
         tuples = []
 
         query_terms = self.parser.parse(query)
+        
+        # d = math.sqrt(math.fsum([math.pow(idf(index.doc_freq(q), ndocs) * tf(index.term_freq(q, doc)), 2) for q in terms]))
 
         for doc in range(0,self.index.ndocs()):
             tfidf = 0
@@ -89,15 +91,8 @@ class VSMCosineSearcher(VSMDotProductSearcher):
         self.index = engine
         self.parser = Parser()
         # Create a file to search for the modulo
-        #set_mod(self.index)
-        terms = self.index.all_terms()
-        ndocs = self.index.ndocs()
-        fp = open(self.index.index_path + '/modulo.txt', 'w')
-        for doc in range(0, ndocs):
-            d = math.sqrt(math.fsum([math.pow(idf(self.index.doc_freq(q), ndocs) * tf(self.index.term_freq(q, doc)), 2) for q in terms]))
-            fp.write(str(doc) + '\t' + str(d) + '\n')
-            print(doc)
-        fp.close()
+        set_mod(self.index)
+
 
     def score(self, term, doc):
         # if os.path.exists(self.index.index_path + '/modulo.txt') == False:
