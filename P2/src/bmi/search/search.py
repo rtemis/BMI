@@ -10,6 +10,7 @@
 
 import math
 from abc import ABC, abstractmethod
+from index import BasicParser
 
 def tf(freq):
     return 1 + math.log2(freq) if freq > 0 else 0
@@ -68,8 +69,43 @@ class SlowVSMSearcher(Searcher):
         return 0
 
 class TermBasedVSMSearcher(Searcher):
-    # Your new code here (exercise 1.1) #
-    pass
+    
+    def __init__(self, index, parser=BasicParser()):
+        super().__init__(index, parser)
+
+    def search(self, query, cutoff):
+        qterms = self.parser.parse(query)
+        ranking = SearchRanking(cutoff)
+        postVals = {}
+
+        # 0 : [ (q1, 7) , (q2, 2) , (q3, 5) ]
+        # 4 : [ (q2, 4) ]
+
+        for term in qterms:
+            for doc, freq in self.index.postings(term):
+                postVals[doc].append([term, freq])
+
+        for doc in postVals:
+            for tup in doc: 
+                score = self.score(tup)
+            
+
+        for docid in range(self.index.ndocs()):
+            score = self.score(docid, qterms)
+            if score:
+                ranking.push(self.index.doc_path(docid), score)
+        return ranking
+
+    def score(self, docid, qterms):
+        prod = 0
+        for term in qterms:
+            prod += tf(self.index.term_freq(term, docid)) \
+                    * idf(self.index.doc_freq(term), self.index.ndocs())
+        mod = self.index.doc_module(docid)
+        if mod:
+            return prod / mod
+        return 0
+
 
 class DocBasedVSMSearcher(Searcher):
     # Your new code here (exercise 1.2*) #

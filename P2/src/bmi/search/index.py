@@ -7,6 +7,15 @@
  la Universidad Autónoma de Madrid. El fin del mismo, así como su uso,
  se ciñe a las actividades docentes de dicha asignatura.
 """
+import os
+import re 
+import pickle
+import shutil
+import zipfile
+import math
+import matplotlib
+import bs4
+import urlopen
 
 class Config(object):
   # variables de clase
