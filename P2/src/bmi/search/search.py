@@ -9,47 +9,28 @@
 """
 
 import math
-import os
 from abc import ABC, abstractmethod
-from statistics import term_stats
 
-# Calculates the tf value 
 def tf(freq):
     return 1 + math.log2(freq) if freq > 0 else 0
 
-# Calculates the idf value  
 def idf(df, n):
     return math.log2((n + 1) / (df + 0.5))
 
-# Returns the modulo for a given document
-def get_mod(index, docid):
-    fp = open(index.index_path + '/modulo.txt', 'r')
-    details = fp.readlines()
-    mod = float(details[docid].split('\t')[1])
+class SearchRanking:
+    # TODO: to be implemented as heap (exercise 1.3) #
+    def __init__(self, cutoff):
+        self.ranking = list()
+        self.cutoff = cutoff
 
-    fp.close()
-    return mod
+    def push(self, docid, score):
+        self.ranking.append((docid, score))
 
-# Creates a lookup file for the modulos of all documents
-def set_mod(index):
-    terms = index.all_terms()
-    ndocs = index.ndocs()
-
-    idfval = {}
-    for t in terms: 
-        idfval[t] = idf(index.doc_freq(t), ndocs)
-
-    fp = open(index.index_path + '/modulo.txt', 'w')
-    for doc in range (0, ndocs):
-        d = math.sqrt(math.fsum([math.pow(0 if tup.info[0] not in idfval else tf(tup.info[1]) * idfval[tup.info[0]], 2) for tup in index.doc_vector(doc)]))
-        fp.write(str(doc) +'\t'+ str(d) +'\n')
-    fp.close()
-
-
-# Parses a query returning a list of words in lower case, separated by spaces
-class Parser():
-    def parse(self, query):
-        return query.lower().split(" ")
+    def __iter__(self):
+        min_l = min(len(self.ranking), self.cutoff)
+        ## sort ranking
+        self.ranking.sort(key=lambda tup: tup[1], reverse=True)
+        return self.ranking[0:min_l]
 
 """
     This is an abstract class for the search engines
@@ -59,46 +40,52 @@ class Searcher(ABC):
         self.index = index
         self.parser = parser
     @abstractmethod
-    def search(self, query, cutoff):
+    def search(self, query, cutoff) -> SearchRanking:
         """ Returns a list of documents built as a pair of path and score """
 
 
-class VSMDotProductSearcher(Searcher):
+class SlowVSMSearcher(Searcher):
+    def __init__(self, index, parser=BasicParser()):
+        super().__init__(index, parser)
 
-    def __init__(self, engine):
-        self.index = engine
-        self.parser = Parser()
-        # term_stats(self.index, 'dotproductSearcher.png')
-
-    
     def search(self, query, cutoff):
-        tuples = []
+        qterms = self.parser.parse(query)
+        ranking = SearchRanking(cutoff)
+        for docid in range(self.index.ndocs()):
+            score = self.score(docid, qterms)
+            if score:
+                ranking.push(self.index.doc_path(docid), score)
+        return ranking
 
-        query_terms = self.parser.parse(query)
-        
-        for doc in range(0,self.index.ndocs()):
-            tfidf = 0
-            for q in query_terms:
-                tfidf += self.score(q, doc)       
-            tuples.append([self.index.doc_path(doc), tfidf])
-        tuples.sort(key=lambda tup: tup[1], reverse=True)
-        return tuples[0:cutoff]
-    
-    # We created a score function to be able to override it when using different indices
-    def score(self, term, doc):
-        return tf(self.index.term_freq(term, doc)) * idf(self.index.doc_freq(term), self.index.ndocs()) 
+    def score(self, docid, qterms):
+        prod = 0
+        for term in qterms:
+            prod += tf(self.index.term_freq(term, docid)) \
+                    * idf(self.index.doc_freq(term), self.index.ndocs())
+        mod = self.index.doc_module(docid)
+        if mod:
+            return prod / mod
+        return 0
 
+class TermBasedVSMSearcher(Searcher):
+    # Your new code here (exercise 1.1) #
+    pass
 
-class VSMCosineSearcher(VSMDotProductSearcher):
-    def __init__(self, engine):
-        self.index = engine
-        self.parser = Parser()
-        # Create a file to search for the modulo
-        set_mod(self.index)
-        # term_stats(self.index, 'vscosineSearcher.png')
+class DocBasedVSMSearcher(Searcher):
+    # Your new code here (exercise 1.2*) #
+    pass
 
-    # For this score, we use the modulo document created and divide
-    def score(self, term, doc):
-        return ( tf(self.index.term_freq(term, doc)) * idf(self.index.doc_freq(term), self.index.ndocs()) ) / get_mod(self.index, doc)
-    
+class ProximitySearcher(Searcher):
+    # Your new code here (exercise 4*) #
+    pass
 
+class PagerankDocScorer():
+    def __init__(self, graphfile, r, n_iter):
+        # Your new code here (exercise 6) #
+        # Format of graphfile:
+        #  node1 node2
+        # TODO #
+        pass
+    def rank(self, cutoff):
+        # TODO #
+        pass

@@ -12,128 +12,101 @@ import whoosh
 from whoosh.fields import Schema, TEXT, ID
 from whoosh.formats import Format
 from whoosh.qparser import QueryParser
-from search import Searcher, tf, idf
-from index import Index, Builder, TermFreq, DocVector
-from bs4 import BeautifulSoup
-from urllib.request import urlopen
-import os, os.path
-import shutil
-import zipfile
-from statistics import term_stats
+from bmi.search.search import Searcher
+from bmi.search.index import Index
+from bmi.search.index import Builder
+from bmi.search.index import TermFreq
+
 # A schema in Whoosh is the set of possible fields in a document in
-# the search space. We just define a simple 'Document' schema
-Document = Schema(
+# the search space. We just define a simple 'Document' schema, with
+# a path (a URL or local pathname) and a content.
+SimpleDocument = Schema(
         path=ID(stored=True),
-        content=TEXT(vector=Format)
-    )
+        content=TEXT(phrase=False,vector=Format))
+ForwardDocument = Schema(
+        path=ID(stored=True),
+        content=TEXT(phrase=False,vector=Format))
+PositionalDocument = Schema(
+        path=ID(stored=True),
+        content=TEXT(phrase=True,vector=Format))
 
 class WhooshBuilder(Builder):
-    def __init__(self, directory):
-        if os.path.exists(directory): shutil.rmtree(directory)
-        os.makedirs(directory)
-        self.writer = whoosh.index.create_in(directory, Document).writer()
-    
-    def build(self, collection):            
-        if os.path.isfile(collection):
-            if '.txt' in collection:
-                fp = open(collection, 'r')
-                urls = fp.readlines()
-                for url in urls:
-                    self.writer.add_document(path=url, content=BeautifulSoup(urlopen(url).read(), "html.parser").text)
-                fp.close()
-                return
-            if '.zip' in collection:
-                archive = zipfile.ZipFile(collection, 'r')
-                for url in archive.namelist():
-                    self.writer.add_document(path=url, content=BeautifulSoup(archive.read(url), "html.parser").text)
-                archive.close()
-                return
-        files = os.listdir(collection)
-        for doc in files:
-            fp = open(collection + '/' + doc, "r")
-            self.writer.add_document(path=doc, content=fp.read())
-            fp.close()
-        return
+    def __init__(self, dir, schema=SimpleDocument):
+        super().__init__(dir)
+        self.whoosh_writer = whoosh.index.create_in(dir, schema).writer(procs=1, limitmb=16384, multisegment=True)
+        self.dir = dir
+
+    def index_document(self, p, text):
+        self.whoosh_writer.add_document(path=p, content=text)
 
     def commit(self):
-        self.writer.commit()
+        self.whoosh_writer.commit()
+        index = WhooshIndex(self.dir)
+        index.save(self.dir)
+
+class WhooshForwardBuilder(WhooshBuilder):
+    def __init__(self, dir):
+        super().__init__(dir, ForwardDocument)
+    def commit(self):
+        self.whoosh_writer.commit()
+        index = WhooshForwardIndex(self.dir)
+        index.save(self.dir)
+
+class WhooshPositionalBuilder(WhooshBuilder):
+    def __init__(self, dir):
+        super().__init__(dir, PositionalDocument)
+    def commit(self):
+        self.whoosh_writer.commit()
+        index = WhooshPositionalIndex(self.dir)
+        index.save(self.dir)
 
 class WhooshIndex(Index):
-    def __init__(self, path):            
-        self.reader = whoosh.index.open_dir(path).reader()
-
-        self.index_path = path
-        
-    # All terms returns only the term info. 
-    def all_terms(self):
-        info = []
-        for i in self.reader.all_terms():
-            if "\\x" not in str(i[1]):
-                info.append(i[1].decode('ascii'))
-
-        # Returning binary like in the given example
-        return info
-    
-    # Concatenate the word with its frequency???
-    def all_terms_with_freq(self):
-        term_freq = []
-        info = self.all_terms()
-
-        for term in info:
-            term_freq.append((term, self.reader.frequency("content", term)))
-        
-        return term_freq   
-
-    # Frequency of a word in all documents
+    def __init__(self, dir):
+        super().__init__(dir)
+        self.whoosh_reader = whoosh.index.open_dir(dir).reader()    
     def total_freq(self, term):
-        return self.reader.frequency("content", term)
+        return self.whoosh_reader.frequency("content", term)
+    def doc_freq(self, term):
+        return self.whoosh_reader.doc_frequency("content", term)
+    def doc_path(self, docid):
+        return self.whoosh_reader.stored_fields(docid)['path']
+    def ndocs(self):
+        return self.whoosh_reader.doc_count()
+    def all_terms(self):
+        return list(self.whoosh_reader.field_terms("content"))
+    def postings(self, term):
+        return self.whoosh_reader.postings("content", term).items_as("frequency") \
+            if self.doc_freq(term) > 0 else []
 
-    # Frequency of a single word in a document 
-    def term_freq(self, term, doc_id): 
-        vector = self.reader.vector(doc_id, "content")
-        vector.skip_to(term)
-        if vector.id() == term:
-            return vector.value_as("frequency")
+class WhooshForwardIndex(WhooshIndex):
+    def doc_vector(self, docID):
+        if self.whoosh_reader.has_vector(docID, "content"):
+            dv = list()
+            for e in self.whoosh_reader.vector_as("frequency", docID, "content"):
+                dv.append(TermFreq(e))
+            return dv
+        print("Error: no doc vector for %s!" % (str(docID)))      
+        return list()
+    def term_freq(self, term, docID) -> int:
+        if self.whoosh_reader.has_vector(docID, "content"):
+            v = self.whoosh_reader.vector(docID, "content")
+            v.skip_to(term)
+            if v.id() == term:
+                return v.value_as("frequency")
         return 0
 
-    # Returns the total number of documents that contain "term"
-    def doc_freq(self, term):
-        return self.reader.doc_frequency("content", term)
-
-    # Returns path of document given by id = doc_id
-    def doc_path(self, doc_id):
-        return self.reader.stored_fields(doc_id)['path']
-
-    # Given a document returns an array of the terms associated to their frequency 
-    def doc_vector(self, doc_id):
-        vector = []
-        for i in self.reader.vector(doc_id, "content").items_as("frequency"):
-            vector.append(TermFreq(i))
-        return vector
-
-
-    # Given a term matches every document with the frequncy of that term
-    def postings(self, word):
-        return self.reader.postings("content", word).items_as("frequency")
-        
-    def ndocs(self):
-        return self.reader.doc_count_all()
-    
-
+class WhooshPositionalIndex(WhooshForwardIndex):
+    def positional_postings(self, term):
+        return self.whoosh_reader.postings("content", term).items_as("positions") \
+            if self.doc_freq(term) > 0 else []
 
 class WhooshSearcher(Searcher):
-
-    def __init__(self, path):
-        self.index_path = path
-        self.index = whoosh.index.open_dir(path)
-        self.searcher = self.index.searcher()
-        self.parser = QueryParser("content", schema=self.index.schema)
-        # term_stats(self.index, 'whooshSearcher.png')
-
+    def __init__(self, dir):
+        self.whoosh_index = whoosh.index.open_dir(dir)
+        self.whoosh_searcher = self.whoosh_index.searcher()
+        self.qparser = QueryParser("content", schema=self.whoosh_index.schema)
     def search(self, query, cutoff):
-        tuples = [] 
-        for path, score in self.searcher.search(self.parser.parse(query)).items():
-            tuples.append((self.index.reader().stored_fields(path)['path'], score))
-        return tuples[:cutoff]
-
-
+        return map(lambda scoredoc: (self.doc_path(scoredoc[0]), scoredoc[1]),
+                   self.whoosh_searcher.search(self.qparser.parse(query), limit=cutoff).items())
+    def doc_path(self, docid):
+        return self.whoosh_index.reader().stored_fields(docid)['path']
