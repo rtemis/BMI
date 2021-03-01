@@ -54,6 +54,7 @@ def examine(dir, term, docid, n):
     for p in sorted(vec, key=lambda x: x[1], reverse=True)[0:n]:
         print("\t", p[1])
     print() 
+    
 
 
 urls = ["https://en.wikipedia.org/wiki/Simpson's_paradox", 
