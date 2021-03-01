@@ -25,23 +25,22 @@ from matplotlib import pyplot as plt
 #     return inDocAppearance #expected structure of the vector [(term1, nDoc1), (term2, nDoc2),..,(termN, nDocN)] where nDoc1>nDoc2>..>nDocN
 
 def term_stats_sort(index):
+    stats = []
     stats = index.all_terms_with_freq()
     stats.sort(key=lambda tup: tup[1], reverse=True)
-
-    return stats
+   
 
 def term_stats_docs(index):
     stats = []
     for term in index.all_terms():
         stats.append([term , index.doc_freq()])
-    
+        #stats.sort(key=lambda tup: tup[1], reverse=True)
     return stats
 
 def term_stats(index):
     plotx = term_stats_sort(index)
-
     ploty = term_stats_docs(index)
-    plt.plot([plotx], [ploty])
+    plt.plot(plotx, ploty)
     plt.xscale("log")
     plt.yscale("log")
     plt.show()

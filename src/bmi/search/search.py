@@ -29,7 +29,7 @@ def get_mod(index, docid):
 def set_mod(index):
     terms = index.all_terms()
     ndocs = index.ndocs()
-
+    tuples = []
     idfval = {}
     for t in terms: 
         idfval[t] = idf(index.doc_freq(t), ndocs)
@@ -37,8 +37,14 @@ def set_mod(index):
     fp = open(index.index_path + '/modulo.txt', 'w')
     for doc in range (0, ndocs):
         d = math.sqrt(math.fsum([math.pow(0 if tup.info[0] not in idfval else tf(tup.info[1]) * idfval[tup.info[0]], 2) for tup in index.doc_vector(doc)]))
+        #tuples.append([self.index.doc_path(doc), d])
         fp.write(str(doc) +'\t'+ str(d) +'\n')
-    fp.close()
+        fp.close()
+    #i = 0
+    #for i in range (0, ndocs)
+    #fp.write(str(tuples[0]) + '\t' + str(tuples[1]) + '\n')
+    #fp.close()
+    #
 
 
 

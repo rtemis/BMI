@@ -90,6 +90,7 @@ def test_read(index, word):
     print("    First two documents:", [(doc, freq) for doc, freq in index.postings(word)][0:2])
     print("Done (", time.time() - stamp, "seconds )")
     print()
+    
 
 
 def test_search (engine, query, cutoff):
