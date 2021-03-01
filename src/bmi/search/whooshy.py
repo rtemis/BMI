@@ -19,7 +19,7 @@ from urllib.request import urlopen
 import os, os.path
 import shutil
 import zipfile
-
+from statistics import term_stats
 # A schema in Whoosh is the set of possible fields in a document in
 # the search space. We just define a simple 'Document' schema
 Document = Schema(
@@ -128,11 +128,12 @@ class WhooshSearcher(Searcher):
         self.index = whoosh.index.open_dir(path)
         self.searcher = self.index.searcher()
         self.parser = QueryParser("content", schema=self.index.schema)
+        term_stats(self.index, 'whooshSearcher.png')
 
     def search(self, query, cutoff):
         tuples = [] 
-        for path, score in self.searcher.search(self.parser.parse(query), limit=cutoff).items():
+        for path, score in self.searcher.search(self.parser.parse(query)).items():
             tuples.append((self.index.reader().stored_fields(path)['path'], score))
-        return tuples
+        return tuples[:cutoff]
 
 

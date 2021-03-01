@@ -11,6 +11,7 @@
 import math
 import os
 from abc import ABC, abstractmethod
+from statistics import term_stats
 
 def tf(freq):
     return 1 + math.log2(freq) if freq > 0 else 0
@@ -63,8 +64,7 @@ class VSMDotProductSearcher(Searcher):
     def __init__(self, engine):
         self.index = engine
         self.parser = Parser()
-        # Create a file to search for the modulo
-        #set_mod(self.index)
+        term_stats(self.index, 'dotproductSearcher.png')
 
 
     def search(self, query, cutoff):
@@ -72,8 +72,6 @@ class VSMDotProductSearcher(Searcher):
 
         query_terms = self.parser.parse(query)
         
-        # d = math.sqrt(math.fsum([math.pow(idf(index.doc_freq(q), ndocs) * tf(index.term_freq(q, doc)), 2) for q in terms]))
-
         for doc in range(0,self.index.ndocs()):
             tfidf = 0
             for q in query_terms:
@@ -92,12 +90,10 @@ class VSMCosineSearcher(VSMDotProductSearcher):
         self.parser = Parser()
         # Create a file to search for the modulo
         set_mod(self.index)
+        term_stats(self.index, 'vscosineSearcher.png')
 
 
     def score(self, term, doc):
-        # if os.path.exists(self.index.index_path + '/modulo.txt') == False:
-        #     set_mod(self.index)
-
         return ( tf(self.index.term_freq(term, doc)) * idf(self.index.doc_freq(term), self.index.ndocs()) ) / get_mod(self.index, doc)
     
 

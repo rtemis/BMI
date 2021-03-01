@@ -37,11 +37,12 @@ def term_stats_docs(index):
     
     return stats
 
-def term_stats(index):
+def term_stats(index, path):
     plotx = term_stats_sort(index)
 
     ploty = term_stats_docs(index)
     plt.plot([plotx], [ploty])
     plt.xscale("log")
     plt.yscale("log")
-    plt.show()
+    #plt.show()
+    plt.savefig("fig1.png", path)
