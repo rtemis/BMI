@@ -138,8 +138,17 @@ class Builder:
     def commit(self):
         pass
 
-
+#module heapq
 class RAMIndex(Index):
+    def __init__(self, index):
+        selfdictionary = {}
+        selfpostings = []
+        for term in index.all_terms():
+            postings.append(index.postings(term))
+        postings.dat = pickle.dumps(postings)
+        
+            
+    def 
     # Your new code here (exercise 2.1) #
     pass
 

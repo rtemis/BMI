@@ -11,6 +11,7 @@
 import math
 from abc import ABC, abstractmethod
 from index import BasicParser
+import heapq
 
 def tf(freq):
     return 1 + math.log2(freq) if freq > 0 else 0
@@ -77,24 +78,21 @@ class TermBasedVSMSearcher(Searcher):
         qterms = self.parser.parse(query)
         ranking = SearchRanking(cutoff)
         postVals = {}
+        scores = []
 
-        # 0 : [ (q1, 7) , (q2, 2) , (q3, 5) ]
+        # doc0 : [ (q1, 7) , (q2, 2) , (q3, 5) ]
         # 4 : [ (q2, 4) ]
 
         for term in qterms:
             for doc, freq in self.index.postings(term):
-                postVals[doc].append([term, freq])
+                postVals[doc].append(term)
 
-        for doc in postVals:
-            for tup in doc: 
-                score = self.score(tup)
-            
+        for key, doc in postVals:
+            scores.append([doc, self.score(key, doc)])
+            return scores
+        
 
-        for docid in range(self.index.ndocs()):
-            score = self.score(docid, qterms)
-            if score:
-                ranking.push(self.index.doc_path(docid), score)
-        return ranking
+       
 
     def score(self, docid, qterms):
         prod = 0
