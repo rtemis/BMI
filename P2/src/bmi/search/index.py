@@ -16,6 +16,7 @@ import math
 import matplotlib
 import bs4
 import urlopen
+import index
 
 class Config(object):
   # variables de clase
@@ -144,11 +145,18 @@ class RAMIndex(Index):
         super().__init__(index, parser)
         self.dictionary = {}
         self.postings = []
-
+        #push the dictionary
         for term in index.all_terms():
             self.postings.append(index.postings(term))
-
-        self.postings.dat = pickle.dumps(postings)
+        fp=open(Config.POSTINGS_FILE, "w")
+        fp.write(pickle.dumps(self.postings))
+        fp.close()
+    
+    def readRAM(self):
+        fp=open(Config.POSTINGS_FILE, "r")
+        fp.read(pickle.load(self.postings))
+        ### where to store?
+        fp.close()
         
             
     #def 
@@ -156,6 +164,7 @@ class RAMIndex(Index):
     #pass
 
 class RAMIndexBuilder(Builder):
+    #populate here
     # Your new code here (exercise 2.2) #
     pass
 
