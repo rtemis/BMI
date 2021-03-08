@@ -156,9 +156,16 @@ class RAMIndex(Index):
     #pass
 
 class RAMIndexBuilder(Builder):
-    # Your new code here (exercise 2.2) #
-    pass
+    def __init__(self, dir):
+        super().__init__(dir)
 
+    def index_document(self, path, text):
+        pass 
+
+    def commit(self):
+        pass
+
+    
 class DiskIndex(Index):
     # Your new code here (exercise 3*) #
     pass
