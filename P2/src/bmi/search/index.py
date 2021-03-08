@@ -16,6 +16,7 @@ import math
 import matplotlib
 import bs4
 import urlopen
+import index
 
 class Config(object):
   # variables de clase
@@ -144,11 +145,18 @@ class RAMIndex(Index):
         super().__init__(index, parser)
         self.dictionary = {}
         self.postings = []
-
+        #push the dictionary
         for term in index.all_terms():
             self.postings.append(index.postings(term))
-
-        self.postings.dat = pickle.dumps(postings)
+        fp=open(Config.POSTINGS_FILE, "w")
+        fp.write(pickle.dumps(self.postings))
+        fp.close()
+    
+    def readRAM(self):
+        fp=open(Config.POSTINGS_FILE, "r")
+        fp.read(pickle.load(self.postings))
+        ### where to store?
+        fp.close()
         
             
     #def 
@@ -158,15 +166,27 @@ class RAMIndex(Index):
 class RAMIndexBuilder(Builder):
     def __init__(self, dir):
         super().__init__(dir)
+        self.docNum = 0
 
     def index_document(self, path, text):
-        for term in text:
+        for term in text.split(' '):
+            if term in self.dictionary:
+                for tup in self.dictionary[term]:
+                    if tup[0] == self.docNum:
+                        tup[1] += 1
+                    else
+                        self.dictionary[term].append((self.docNum, 1))
+            else:
+                self.dictionary[term] = []
+                self.dictionary[term].append((self.docNum, 1))
+        
+        self.docNum += 1
+
             
 
     def commit(self):
         pass
 
-    
 class DiskIndex(Index):
     # Your new code here (exercise 3*) #
     pass
