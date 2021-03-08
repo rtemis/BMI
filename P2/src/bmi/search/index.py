@@ -140,17 +140,20 @@ class Builder:
 
 #module heapq
 class RAMIndex(Index):
-    def __init__(self, index):
-        selfdictionary = {}
-        selfpostings = []
+    def __init__(self, index, parser):
+        super().__init__(index, parser)
+        self.dictionary = {}
+        self.postings = []
+
         for term in index.all_terms():
-            postings.append(index.postings(term))
-        postings.dat = pickle.dumps(postings)
+            self.postings.append(index.postings(term))
+
+        self.postings.dat = pickle.dumps(postings)
         
             
-    def 
+    #def 
     # Your new code here (exercise 2.1) #
-    pass
+    #pass
 
 class RAMIndexBuilder(Builder):
     # Your new code here (exercise 2.2) #

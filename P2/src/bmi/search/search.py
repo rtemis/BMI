@@ -79,19 +79,16 @@ class TermBasedVSMSearcher(Searcher):
         ranking = SearchRanking(cutoff)
         postVals = {}
         scores = []
-
-        # doc0 : [ (q1, 7) , (q2, 2) , (q3, 5) ]
-        # 4 : [ (q2, 4) ]
-
+        
         for term in qterms:
             for doc, freq in self.index.postings(term):
                 postVals[doc].append(term)
 
         for key, doc in postVals:
             scores.append([doc, self.score(key, doc)])
-            return scores
         
-
+        scores.sort(key=lambda tup: tup[1], reverse=True)
+        return scores[0:cutoff]
        
 
     def score(self, docid, qterms):
