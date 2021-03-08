@@ -160,7 +160,8 @@ class RAMIndexBuilder(Builder):
         super().__init__(dir)
 
     def index_document(self, path, text):
-        pass 
+        for term in text:
+            
 
     def commit(self):
         pass
