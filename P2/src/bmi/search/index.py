@@ -141,16 +141,16 @@ class Builder:
 
 #module heapq
 class RAMIndex(Index):
-    def __init__(self, index, parser):
-        super().__init__(index, parser)
+    def __init__(self, dir):
+        super().__init__(dir)
         self.dictionary = {}
         self.postings = []
         #push the dictionary
-        for term in index.all_terms():
-            self.postings.append(index.postings(term))
-        fp=open(Config.POSTINGS_FILE, "w")
-        fp.write(pickle.dumps(self.postings))
-        fp.close()
+        # for term in index.all_terms():
+        #     self.postings.append(index.postings(term))
+        # fp=open(Config.POSTINGS_FILE, "w")
+        # fp.write(pickle.dumps(self.postings))
+        # fp.close()
     
     def readRAM(self):
         fp=open(Config.POSTINGS_FILE, "r")
@@ -158,34 +158,35 @@ class RAMIndex(Index):
         ### where to store?
         fp.close()
         
-            
-    #def 
-    # Your new code here (exercise 2.1) #
-    #pass
+    def indexDoc(self, docid, text):
+        for term in text.split(' '):
+            if term in self.dictionary:
+                if docid in self.dictionary[term]:
+                    self.dictionary[term][docid][1] += 1
+                # for tup in self.dictionary[term]:
+                #     if tup[0] == docid:
+                #         tup[1] += 1
+                #     else:
+                else:
+                    self.dictionary[term].append((docid, 1))
+            else:
+                self.dictionary[term] = []
+                self.dictionary[term].append((docid, 1))
+
 
 class RAMIndexBuilder(Builder):
     def __init__(self, dir):
         super().__init__(dir)
-        self.docNum = 0
+        self.directory = dir
+        self.index = RAMIndex()
 
     def index_document(self, path, text):
-        for term in text.split(' '):
-            if term in self.dictionary:
-                for tup in self.dictionary[term]:
-                    if tup[0] == self.docNum:
-                        tup[1] += 1
-                    else
-                        self.dictionary[term].append((self.docNum, 1))
-            else:
-                self.dictionary[term] = []
-                self.dictionary[term].append((self.docNum, 1))
-        
-        self.docNum += 1
-
-            
+        docid = self.index.ndocs()
+        self.index.add_doc(path)
+        self.index.indexDoc(docid, text)            
 
     def commit(self):
-        pass
+        self.index.save(self.directory)
 
 class DiskIndex(Index):
     # Your new code here (exercise 3*) #
