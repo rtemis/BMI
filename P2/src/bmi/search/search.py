@@ -20,10 +20,18 @@ def idf(df, n):
     return math.log2((n + 1) / (df + 0.5))
 
 class SearchRanking:
+    heap = []
+    heapq.heapify(heap)
     # TODO: to be implemented as heap (exercise 1.3) #
     def __init__(self, cutoff):
         self.ranking = list()
         self.cutoff = cutoff
+
+    def heapPush(self, docid, score):
+        tup = [score, docid]
+        heapq.heappush(heap, tup)
+    
+    def heapPop():
 
     def push(self, docid, score):
         self.ranking.append((docid, score))
