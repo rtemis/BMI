@@ -27,21 +27,38 @@ class SearchRanking:
         self.ranking = list()
         self.cutoff = cutoff
 
-    def heapPush(self, docid, score):
-        tup = [score, docid]
-        heapq.heappush(self.heap, tup)
-    
-    def heapPop(self):
-        return heapq.heappop(self.heap)
-
     def push(self, docid, score):
-        self.ranking.append((docid, score))
+        # Create new node
+        tup = [score, docid]
+
+        # Test to see if heapsize is greater than cutoff
+        if len(self.heap) >= self.cutoff:
+            # if limit reached, test score of new node
+            if self.heap[0][0] > score:
+                nodes = []
+                nodes.append(tup)
+
+                for x in self.heap:
+                    nodes.append(heapq.heappop(self.heap))
+                
+                rem = tup
+                for n in nodes:
+                    if n[0] > rem[0]:
+                        rem = n
+                
+                nodes.remove(rem)
+                for n in nodes:
+                    heapq.heappush(self.heap, n)
+        else:
+            heapq.heappush(self.heap, tup)
+            
 
     def __iter__(self):
-        min_l = min(len(self.ranking), self.cutoff)
-        ## sort ranking
-        self.ranking.sort(key=lambda tup: tup[1], reverse=True)
-        return self.ranking[0:min_l]
+        for n in self.heap:
+            self.ranking.append(heapq.heappop(self.heap))
+        
+        self.ranking.sort(key=lambda tup: tup[0], reverse=True)
+        return self.ranking
 
 """
     This is an abstract class for the search engines
