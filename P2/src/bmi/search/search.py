@@ -20,19 +20,19 @@ def idf(df, n):
     return math.log2((n + 1) / (df + 0.5))
 
 class SearchRanking:
-    heap = []
-    heapq.heapify(heap)
     # TODO: to be implemented as heap (exercise 1.3) #
     def __init__(self, cutoff):
+        self.heap = []
+        heapq.heapify(self.heap)
         self.ranking = list()
         self.cutoff = cutoff
 
-    def heapPush(self, heap, docid, score):
+    def heapPush(self, docid, score):
         tup = [score, docid]
-        heapq.heappush(heap, tup)
+        heapq.heappush(self.heap, tup)
     
-    def heapPop(self, heap):
-        pass
+    def heapPop(self):
+        return heapq.heappop(self.heap)
 
     def push(self, docid, score):
         self.ranking.append((docid, score))
@@ -118,9 +118,27 @@ class DocBasedVSMSearcher(Searcher):
 class ProximitySearcher(Searcher):
     # Your new code here (exercise 4*) #
     pass
-
 class PagerankDocScorer():
     def __init__(self, graphfile, r, n_iter):
+        self.inConnections = {}
+        self.outConnections = {}
+        fp = open(graphfile, "r")
+        #a->b           a is an "inconnection" of b, and b is an "outconnection" of a
+        #assuming that the first one is the source and the second is the target and only two docids in each line
+        for line in fp.readlines():
+            var=line.split()
+            self.inConnections[var[1]].append(var[0])
+            self.outConnections[var[0]].append(var[1])
+        fp.close()
+        pages = []
+        support = []
+        for k in len(self.inConnections):
+            pages[k]=1/len(self.inConnections)
+        for n in range(n_iter):
+            for k in len(self.inConnections)
+        
+            
+        
         # Your new code here (exercise 6) #
         # Format of graphfile:
         #  node1 node2
