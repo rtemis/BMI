@@ -31,7 +31,7 @@ class SearchRanking:
         tup = [score, docid]
         heapq.heappush(heap, tup)
     
-    def heapPop(heap):
+    def heapPop(self, heap):
         pass
 
     def push(self, docid, score):
