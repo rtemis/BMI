@@ -120,7 +120,7 @@ class Builder:
         file = zipfile.ZipFile(filename, mode='r', compression=zipfile.ZIP_DEFLATED)
         for name in file.namelist():
             with file.open(name, "r", force_zip64=True) as f:
-                self.index_document(name, BeautifulSoup(f.read().decode("utf-8"), "html.parser").text)
+                self.index_document(name, bs4.BeautifulSoup(f.read().decode("utf-8"), "html.parser").text)
         file.close()
     def index_dir(self, dir):
         for subdir, dirs, files in os.walk(dir):
@@ -133,7 +133,7 @@ class Builder:
             self.index_urls(line.rstrip('\n') for line in f)
     def index_urls(self, urls):
         for url in urls:
-            self.index_document(url, BeautifulSoup(urlopen(url).read().decode("utf-8"), "html.parser").text)
+            self.index_document(url, bs4.BeautifulSoup(urlopen(url).read().decode("utf-8"), "html.parser").text)
     def index_document(self, path, text):
         pass
     def commit(self):
@@ -159,7 +159,7 @@ class RAMIndex(Index):
         fp.close()
         
     def indexDoc(self, docid, text):
-        for term in text.split(' '):
+        for term in text.split():
             if term in self.dictionary:
                 if docid in self.dictionary[term]:
                     self.dictionary[term][docid][1] += 1
@@ -178,7 +178,7 @@ class RAMIndexBuilder(Builder):
     def __init__(self, dir):
         super().__init__(dir)
         self.directory = dir
-        self.index = RAMIndex()
+        self.index = RAMIndex(dir)
 
     def index_document(self, path, text):
         docid = self.index.ndocs()
@@ -204,7 +204,7 @@ class PositionalIndex(Index):
     # For example: PositionalIndex(RAMIndex)
     pass
 
-class PositionalIndexBuilder(IndexBuilder):
+class PositionalIndexBuilder(Builder):
     # Your new code here (exercise 5*) #
     # Same note as for PositionalIndex
     pass
