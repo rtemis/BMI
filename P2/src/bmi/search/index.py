@@ -139,7 +139,6 @@ class Builder:
     def commit(self):
         pass
 
-#module heapq
 class RAMIndex(Index):
     def __init__(self, dir):
         super().__init__(dir)
