@@ -27,11 +27,12 @@ class SearchRanking:
         self.ranking = list()
         self.cutoff = cutoff
 
-    def heapPush(self, docid, score):
+    def heapPush(self, heap, docid, score):
         tup = [score, docid]
         heapq.heappush(heap, tup)
     
     def heapPop():
+        pass
 
     def push(self, docid, score):
         self.ranking.append((docid, score))
