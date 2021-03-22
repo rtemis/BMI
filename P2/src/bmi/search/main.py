@@ -10,18 +10,18 @@
 import os
 import shutil
 import time
-from bmi.search.index import (
+from index import (
         RAMIndex, RAMIndexBuilder,
         DiskIndex, DiskIndexBuilder,
         PositionalIndex, PositionalIndexBuilder,
     )
-from bmi.search.search import (
+from search import (
         SlowVSMSearcher,
         TermBasedVSMSearcher, DocBasedVSMSearcher,
         ProximitySearcher, 
         PagerankDocScorer,
     )
-from bmi.search.whooshy import (
+from whooshy import (
         WhooshBuilder, WhooshIndex, 
         WhooshForwardBuilder, WhooshForwardIndex, 
         WhooshPositionalBuilder, WhooshPositionalIndex, 
@@ -36,7 +36,7 @@ def main():
     test_collection (collections_root_dir + "urls.txt", index_root_dir + "urls/", "wikipedia", ["information probability", "probability information", "higher probability"], True)
     test_collection (collections_root_dir + "docs1k.zip", index_root_dir + "docs1k/", "seat", ["obama family tree"], True)
     test_collection (collections_root_dir + "docs10k.zip", index_root_dir + "docs10k/", "seat", ["obama family tree"], True)
-    test_pagerank("./data/", 5)
+    # test_pagerank("./data/", 5)
 
 def test_collection(collection_path: str, index_path: str, word: str, queries: list, analyse_performance: bool):
     print("=================================================================")
@@ -46,18 +46,18 @@ def test_collection(collection_path: str, index_path: str, word: str, queries: l
     test_build(WhooshBuilder(index_path + "whoosh"), collection_path)
     test_build(WhooshForwardBuilder(index_path + "whoosh_fwd"), collection_path)
     test_build(WhooshPositionalBuilder(index_path + "whoosh_pos"), collection_path)
-    test_build(RAMIndexBuilder(index_path + "ram"), collection_path)
-    test_build(DiskIndexBuilder(index_path + "disk"), collection_path)
-    test_build(PositionalIndexBuilder(index_path + "pos"), collection_path)
+    # test_build(RAMIndexBuilder(index_path + "ram"), collection_path)
+    # test_build(DiskIndexBuilder(index_path + "disk"), collection_path)
+    # test_build(PositionalIndexBuilder(index_path + "pos"), collection_path)
 
     # We now inspect all the implementations
     indices = [
             WhooshIndex(index_path + "whoosh"),
             WhooshForwardIndex(index_path + "whoosh_fwd"), 
             WhooshPositionalIndex(index_path + "whoosh_pos"), 
-            RAMIndex(index_path + "ram"),
-            DiskIndex(index_path + "disk"),
-            PositionalIndex(index_path + "pos"),
+            # RAMIndex(index_path + "ram"),
+            # DiskIndex(index_path + "disk"),
+            # PositionalIndex(index_path + "pos"),
             ]
     for index in indices:
         test_read(index, word)
@@ -69,13 +69,13 @@ def test_collection(collection_path: str, index_path: str, word: str, queries: l
         test_search(WhooshSearcher(index_path + "whoosh"), WhooshIndex(index_path + "whoosh"), query, 5)
         test_search(WhooshSearcher(index_path + "whoosh_fwd"), WhooshForwardIndex(index_path + "whoosh_fwd"), query, 5)
         test_search(WhooshSearcher(index_path + "whoosh_pos"), WhooshPositionalIndex(index_path + "whoosh_pos"), query, 5)
-        test_search(ProximitySearcher(WhooshPositionalIndex(index_path + "whoosh_pos")), WhooshPositionalIndex(index_path + "whoosh_pos"), query, 5)
+        # test_search(ProximitySearcher(WhooshPositionalIndex(index_path + "whoosh_pos")), WhooshPositionalIndex(index_path + "whoosh_pos"), query, 5)
         for index in indices:
             # our searchers should work with any other index
             test_search(SlowVSMSearcher(index), index, query, 5)
             test_search(TermBasedVSMSearcher(index), index, query, 5)
-            test_search(DocBasedVSMSearcher(index), index, query, 5)
-        test_search(ProximitySearcher(PositionalIndex(index_path + "pos")), PositionalIndex(index_path + "pos"), query, 5)
+            # test_search(DocBasedVSMSearcher(index), index, query, 5)
+        # test_search(ProximitySearcher(PositionalIndex(index_path + "pos")), PositionalIndex(index_path + "pos"), query, 5)
 
     # if we keep the list in memory, there may be problems with accessing the same index twice
     indices = list()
@@ -152,16 +152,16 @@ def test_index_performance (collection_path: str, base_index_path: str):
     b.build(collection_path)
     b.commit()
     print("\tWhooshPositionalIndex: %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
-    b = RAMIndexBuilder(base_index_path + "ram")
-    b.build(collection_path)
-    b.commit()
-    print("\tRAMIndex: %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
-    b = DiskIndexBuilder(base_index_path + "disk")
-    b.build(collection_path)
-    b.commit()
-    print("\tDiskIndex: %s seconds ---" % (time.time() - start_time))
+    # start_time = time.time()
+    # b = RAMIndexBuilder(base_index_path + "ram")
+    # b.build(collection_path)
+    # b.commit()
+    # print("\tRAMIndex: %s seconds ---" % (time.time() - start_time))
+    # start_time = time.time()
+    # b = DiskIndexBuilder(base_index_path + "disk")
+    # b.build(collection_path)
+    # b.commit()
+    # print("\tDiskIndex: %s seconds ---" % (time.time() - start_time))
 
     print("  Load time...")
     start_time = time.time()
@@ -173,19 +173,19 @@ def test_index_performance (collection_path: str, base_index_path: str):
     start_time = time.time()
     WhooshPositionalIndex(base_index_path + "whoosh_pos")
     print("\tWhooshPositionalIndex: %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
-    RAMIndex(base_index_path + "ram")
-    print("\tRAMIndex: %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
-    DiskIndex(base_index_path + "disk")
-    print("\tDiskIndex: %s seconds ---" % (time.time() - start_time))
+    # start_time = time.time()
+    # RAMIndex(base_index_path + "ram")
+    # print("\tRAMIndex: %s seconds ---" % (time.time() - start_time))
+    # start_time = time.time()
+    # DiskIndex(base_index_path + "disk")
+    # print("\tDiskIndex: %s seconds ---" % (time.time() - start_time))
 
     print("  Disk space...")
     print("\tWhooshIndex: %s space ---" % (disk_space(base_index_path + "whoosh")))
     print("\tWhooshForwardIndex: %s space ---" % (disk_space(base_index_path + "whoosh_fwd")))
     print("\tWhooshPositionalIndex: %s space ---" % (disk_space(base_index_path + "whoosh_pos")))
-    print("\tRAMIndex: %s space ---" % (disk_space(base_index_path + "ram")))
-    print("\tDiskIndex: %s space ---" % (disk_space(base_index_path + "disk")))
+    # print("\tRAMIndex: %s space ---" % (disk_space(base_index_path + "ram")))
+    # print("\tDiskIndex: %s space ---" % (disk_space(base_index_path + "disk")))
 
 
 def test_search_performance (collection_name: str, base_index_path: str, query: str, cutoff: int):
@@ -193,7 +193,7 @@ def test_search_performance (collection_name: str, base_index_path: str, query: 
     print("Testing search performance on " + collection_name + " document collection with query: '" + query + "'")
     whoosh_index = WhooshIndex(base_index_path + "whoosh")
     ram_index = RAMIndex(base_index_path + "ram")
-    disk_index = DiskIndex(base_index_path + "disk")
+    # disk_index = DiskIndex(base_index_path + "disk")
 
     start_time = time.time()
     test_search(WhooshSearcher(base_index_path + "whoosh"), whoosh_index, query, cutoff)
@@ -206,16 +206,16 @@ def test_search_performance (collection_name: str, base_index_path: str, query: 
     start_time = time.time()
     test_search(TermBasedVSMSearcher(whoosh_index), whoosh_index, query, cutoff)
     print("--- TermVSM on Whoosh %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
-    test_search(TermBasedVSMSearcher(ram_index), ram_index, query, cutoff)
-    print("--- TermVSM on RAM %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
-    test_search(TermBasedVSMSearcher(disk_index), disk_index, query, cutoff)
-    print("--- TermVSM on Disk %s seconds ---" % (time.time() - start_time))
+    # start_time = time.time()
+    # test_search(TermBasedVSMSearcher(ram_index), ram_index, query, cutoff)
+    # print("--- TermVSM on RAM %s seconds ---" % (time.time() - start_time))
+    # start_time = time.time()
+    # test_search(TermBasedVSMSearcher(disk_index), disk_index, query, cutoff)
+    # print("--- TermVSM on Disk %s seconds ---" % (time.time() - start_time))
 
-    start_time = time.time()
-    test_search(DocBasedVSMSearcher(disk_index), disk_index, query, cutoff)
-    print("--- DocVSM on Disk %s seconds ---" % (time.time() - start_time))
+    # start_time = time.time()
+    # test_search(DocBasedVSMSearcher(disk_index), disk_index, query, cutoff)
+    # print("--- DocVSM on Disk %s seconds ---" % (time.time() - start_time))
 
 def test_pagerank(graphs_root_dir, cutoff):
     print("----------------------------")

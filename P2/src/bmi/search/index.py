@@ -7,16 +7,15 @@
  la Universidad Autónoma de Madrid. El fin del mismo, así como su uso,
  se ciñe a las actividades docentes de dicha asignatura.
 """
-import os
-import re 
-import pickle
+import os, os.path
 import shutil
+import pickle
 import zipfile
+from urllib.request import urlopen
+from bs4 import BeautifulSoup
+import re
+import sys
 import math
-import matplotlib
-import bs4
-import urlopen
-import index
 
 class Config(object):
   # variables de clase
@@ -30,6 +29,8 @@ class BasicParser:
     @staticmethod
     def parse(text):
         return re.findall(r"[^\W\d_]+|\d+", text.lower())
+
+import search as s
 
 class TermFreq():
     def __init__(self, t):
@@ -120,7 +121,7 @@ class Builder:
         file = zipfile.ZipFile(filename, mode='r', compression=zipfile.ZIP_DEFLATED)
         for name in file.namelist():
             with file.open(name, "r", force_zip64=True) as f:
-                self.index_document(name, bs4.BeautifulSoup(f.read().decode("utf-8"), "html.parser").text)
+                self.index_document(name, BeautifulSoup(f.read().decode("utf-8"), "html.parser").text)
         file.close()
     def index_dir(self, dir):
         for subdir, dirs, files in os.walk(dir):
@@ -133,7 +134,7 @@ class Builder:
             self.index_urls(line.rstrip('\n') for line in f)
     def index_urls(self, urls):
         for url in urls:
-            self.index_document(url, bs4.BeautifulSoup(urlopen(url).read().decode("utf-8"), "html.parser").text)
+            self.index_document(url, BeautifulSoup(urlopen(url).read().decode("utf-8"), "html.parser").text)
     def index_document(self, path, text):
         pass
     def commit(self):
@@ -152,25 +153,22 @@ class RAMIndex(Index):
         # fp.close()
     
     def readRAM(self):
-        fp=open(Config.POSTINGS_FILE, "r")
-        fp.read(pickle.load(self.postings))
-        ### where to store?
-        fp.close()
+        self.postings = pickle.load(Config.POSTINGS_FILE, 'rb')
+        # fp = open(Config.POSTINGS_FILE, "r")
+        # fp.read(pickle.load(self.postings))
+        # ### where to store?
+        # fp.close()
         
     def indexDoc(self, docid, text):
         for term in text.split():
             if term in self.dictionary:
                 if docid in self.dictionary[term]:
                     self.dictionary[term][docid][1] += 1
-                # for tup in self.dictionary[term]:
-                #     if tup[0] == docid:
-                #         tup[1] += 1
-                #     else:
                 else:
-                    self.dictionary[term].append((docid, 1))
+                    self.dictionary[term].append([docid, 1])
             else:
                 self.dictionary[term] = []
-                self.dictionary[term].append((docid, 1))
+                self.dictionary[term].append([docid, 1])
 
 
 class RAMIndexBuilder(Builder):

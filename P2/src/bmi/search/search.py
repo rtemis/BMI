@@ -24,7 +24,7 @@ class SearchRanking:
     def __init__(self, cutoff):
         self.heap = []
         heapq.heapify(self.heap)
-        self.ranking = list()
+        self.ranking = []
         self.cutoff = cutoff
 
     def push(self, docid, score):
@@ -32,13 +32,13 @@ class SearchRanking:
         tup = [score, docid]
 
         # Test to see if heapsize is greater than cutoff
-        if len(self.heap) >= self.cutoff:
+        if len(self.heap) > self.cutoff:
             # if limit reached, test score of new node
             if self.heap[0][0] > score:
                 nodes = []
                 nodes.append(tup)
 
-                for x in self.heap:
+                while self.heap != []:
                     nodes.append(heapq.heappop(self.heap))
                 
                 rem = tup
@@ -51,17 +51,25 @@ class SearchRanking:
                     heapq.heappush(self.heap, n)
         else:
             heapq.heappush(self.heap, tup)
-            
+                    
 
     def __iter__(self):
-        # Append each popped node to ranking list 
-        self.ranking = []
-        for n in self.heap:
+        min_l = min(len(self.ranking), self.cutoff)
+        ## sort ranking
+        self.ranking.sort(key=lambda tup: tup[1], reverse=True)
+        return iter(self.ranking[0:min_l])
+
+    def score(self, index):
+        while self.heap != []:
             self.ranking.append(heapq.heappop(self.heap))
         
         # Inverse sort by score
         self.ranking.sort(key=lambda tup: tup[0], reverse=True)
-        return self.ranking
+        retList = []
+        for s in self.ranking:
+            retList.append([index.doc_path(s[1]), s[0]])
+
+        return retList
 
 """
     This is an abstract class for the search engines
@@ -80,13 +88,18 @@ class SlowVSMSearcher(Searcher):
         super().__init__(index, parser)
 
     def search(self, query, cutoff):
+        # Parse query
         qterms = self.parser.parse(query)
+        # Create ranking tool
         ranking = SearchRanking(cutoff)
+        # For all docs, calculate score
         for docid in range(self.index.ndocs()):
             score = self.score(docid, qterms)
-            if score:
-                ranking.push(self.index.doc_path(docid), score)
-        return ranking
+            if score != 0:
+                ranking.push(docid, score)
+
+        # Return the new list
+        return ranking.score(self.index)
 
     def score(self, docid, qterms):
         prod = 0
@@ -104,36 +117,54 @@ class TermBasedVSMSearcher(Searcher):
         super().__init__(index, parser)
 
     def search(self, query, cutoff):
+        # Parse terms of query
         qterms = self.parser.parse(query)
+        # Create ranking tool (heap size of cutoff)
         ranking = SearchRanking(cutoff)
+        # Create dictionary to store rankings
         postVals = {}
-        scores = []
         
+        # For each term in the query 
         for term in qterms:
+            # For each doc in the postings list for that term
             for doc, freq in self.index.postings(term):
-                postVals[doc].append(term)
+                # Calculate the partial score for that term
+                if doc in postVals:
+                    postVals[doc] += self.score(doc, term)  #append score here. Postvals could be a dict. of docids and score.  Then we should just push this dict. in SearchRank
+                else:
+                    postVals[doc] = self.score(doc, term)  
 
-        for key, doc in postVals:
-            scores.append([doc, self.score(key, doc)])
-        
-        scores.sort(key=lambda tup: tup[1], reverse=True)
-        return scores[0:cutoff]
+        # Rank each of the scores obtained in the loop
+        for key in postVals:
+            # Heap automatically adjusts to the size of the cutoff list
+            ranking.push(key, postVals[key])
+
+        # Return the new list
+        return ranking.score(self.index)
        
 
-    def score(self, docid, qterms):
-        prod = 0
-        for term in qterms:
-            prod += tf(self.index.term_freq(term, docid)) \
+    def score(self, docid, term):
+        return tf(self.index.term_freq(term, docid)) \
                     * idf(self.index.doc_freq(term), self.index.ndocs())
-        mod = self.index.doc_module(docid)
-        if mod:
-            return prod / mod
-        return 0
 
 
 class DocBasedVSMSearcher(Searcher):
+    def __init__(self, index, parser=BasicParser()):
+        super().__init__(index, parser)
+    
     # Your new code here (exercise 1.2*) #
-    pass
+    def search(self, query, cutoff):
+        qterms = self.parser.parse(query)
+        ranking = SearchRanking(cutoff)
+        
+        for term in qterms:
+            for doc, freq in self.index.postings(term):
+                ranking.push()
+
+        scores = ranking.score()
+
+        return scores #return a searchRanking also here.
+    
 
 class ProximitySearcher(Searcher):
     # Your new code here (exercise 4*) #
@@ -165,21 +196,35 @@ class PagerankDocScorer():
             self.outConnections[var[0]].append(var[1])
 
         fp.close()
-        
+
+        keys = reduce(lambda x, y: x.union(y.keys()), [inConnections, outConnections], set())
+
         # List of P
         self.p = []
         # List of P'
         self.p_p = []
         
-        N = len(self.inConnections)
+        N = len(keys)
         
+        # Initialize all values of P
         for k in range(N):
             self.p[k] = 1/N
+
+        # Begin iterations
         for n in range(n_iter):
             for k in range(N):
                 self.p_p = r/N 
-             
-        
+
+        # Using the union of the keys of each dictionary
+        # for k in len(self.inConnections):
+        #     pages[k] = 1/len(self.inConnections)
+        # for n in range(n_iter):
+        #     for k in len(self.inConnections):
+        #         support[k] = r/len(self.inConnections)
+
+        # a b
+        # a c
+        # r to escape sinkholes 
             
         
         # Your new code here (exercise 6) #
