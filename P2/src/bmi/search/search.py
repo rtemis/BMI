@@ -54,6 +54,12 @@ class SearchRanking:
             
 
     def __iter__(self):
+        min_l = min(len(self.ranking), self.cutoff)
+        ## sort ranking
+        self.ranking.sort(key=lambda tup: tup[1], reverse=True)
+        return iter(self.ranking[0:min_l])
+
+    def score(self):
         for n in self.heap:
             self.ranking.append(heapq.heappop(self.heap))
         
@@ -83,7 +89,8 @@ class SlowVSMSearcher(Searcher):
             score = self.score(docid, qterms)
             if score:
                 ranking.push(self.index.doc_path(docid), score)
-        return ranking
+        
+        return ranking.score()
 
     def score(self, docid, qterms):
         prod = 0
@@ -104,33 +111,42 @@ class TermBasedVSMSearcher(Searcher):
         qterms = self.parser.parse(query)
         ranking = SearchRanking(cutoff)
         postVals = {}
-        scores = []
         
         for term in qterms:
             for doc, freq in self.index.postings(term):
-                postVals[doc].append(term)
+                if doc in postVals:
+                    postVals[doc] += self.score(doc, term)  #append score here. Postvals could be a dict. of docids and score.  Then we should just push this dict. in SearchRank
+                else:
+                    postVals[doc] = self.score(doc, term)  #append score here. Postvals could be a dict. of docids and score.  Then we should just push this dict. in SearchRank
 
-        for key, doc in postVals:
-            scores.append([doc, self.score(key, doc)])
-        
-        scores.sort(key=lambda tup: tup[1], reverse=True)
-        return scores[0:cutoff]
+        for key in postVals.keys():
+            ranking.push(key, postVals[key])
+
+        return ranking.score() 
        
 
-    def score(self, docid, qterms):
-        prod = 0
-        for term in qterms:
-            prod += tf(self.index.term_freq(term, docid)) \
+    def score(self, docid, term):
+        return tf(self.index.term_freq(term, docid)) \
                     * idf(self.index.doc_freq(term), self.index.ndocs())
-        mod = self.index.doc_module(docid)
-        if mod:
-            return prod / mod
-        return 0
 
 
 class DocBasedVSMSearcher(Searcher):
+    def __init__(self, index, parser=BasicParser()):
+        super().__init__(index, parser)
+    
     # Your new code here (exercise 1.2*) #
-    pass
+    def search(self, query, cutoff):
+        qterms = self.parser.parse(query)
+        ranking = SearchRanking(cutoff)
+        
+        # WE ARE PRETENDING THAT POSTINGS EXISTS
+        for elem in self.index.postings():
+            ranking.push()
+
+        scores = ranking.score()
+
+        return scores #return a searchRanking also here.
+    
 
 class ProximitySearcher(Searcher):
     # Your new code here (exercise 4*) #
@@ -139,6 +155,7 @@ class PagerankDocScorer():
     def __init__(self, graphfile, r, n_iter):
         self.inConnections = {}
         self.outConnections = {}
+        N = 0
         fp = open(graphfile, "r")
         #a->b           a is an "inconnection" of b, and b is an "outconnection" of a
         #assuming that the first one is the source and the second is the target and only two docids in each line
@@ -149,11 +166,17 @@ class PagerankDocScorer():
         fp.close()
         pages = []
         support = []
+
+        # Using the union of the keys of each dictionary
         for k in len(self.inConnections):
-            pages[k]=1/len(self.inConnections)
+            pages[k] = 1/len(self.inConnections)
         for n in range(n_iter):
-            for k in len(self.inConnections)
-        
+            for k in len(self.inConnections):
+                support[k] = r/len(self.inConnections)
+
+        # a b
+        # a c
+        # r to escape sinkholes 
             
         
         # Your new code here (exercise 6) #
