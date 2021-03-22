@@ -54,9 +54,12 @@ class SearchRanking:
             
 
     def __iter__(self):
+        # Append each popped node to ranking list 
+        self.ranking = []
         for n in self.heap:
             self.ranking.append(heapq.heappop(self.heap))
         
+        # Inverse sort by score
         self.ranking.sort(key=lambda tup: tup[0], reverse=True)
         return self.ranking
 
@@ -136,23 +139,46 @@ class ProximitySearcher(Searcher):
     # Your new code here (exercise 4*) #
     pass
 class PagerankDocScorer():
+
     def __init__(self, graphfile, r, n_iter):
+        # Set up connection lists
         self.inConnections = {}
         self.outConnections = {}
+
+        # a->b           a is an "inconnection" of b, and b is an "outconnection" of a
+        # assuming that the first one is the source and the second is the target and only two docids in each line
+ 
         fp = open(graphfile, "r")
-        #a->b           a is an "inconnection" of b, and b is an "outconnection" of a
-        #assuming that the first one is the source and the second is the target and only two docids in each line
+
         for line in fp.readlines():
-            var=line.split()
+            var = line.split()
+            
+            # Test to see if connection variable exists 
+            if self.inConnections[var[1]] is None: 
+                self.inConnections[var[1]] = []
+
+            if self.outConnections[var[0]] is None:
+                self.outConnections[var[0]] = []
+
+            # Append to list of connections 
             self.inConnections[var[1]].append(var[0])
             self.outConnections[var[0]].append(var[1])
+
         fp.close()
-        pages = []
-        support = []
-        for k in len(self.inConnections):
-            pages[k]=1/len(self.inConnections)
+        
+        # List of P
+        self.p = []
+        # List of P'
+        self.p_p = []
+        
+        N = len(self.inConnections)
+        
+        for k in range(N):
+            self.p[k] = 1/N
         for n in range(n_iter):
-            for k in len(self.inConnections)
+            for k in range(N):
+                self.p_p = r/N 
+             
         
             
         
