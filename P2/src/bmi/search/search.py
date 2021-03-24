@@ -12,6 +12,7 @@ import math
 from abc import ABC, abstractmethod
 from index import BasicParser
 import heapq
+import itertools 
 
 def tf(freq):
     return 1 + math.log2(freq) if freq > 0 else 0
@@ -159,7 +160,7 @@ class DocBasedVSMSearcher(Searcher):
         
         for term in qterms:
             for doc, freq in self.index.postings(term):
-                ranking.push()
+                ranking.push(doc, )
 
         scores = ranking.score()
 
@@ -197,7 +198,7 @@ class PagerankDocScorer():
 
         fp.close()
 
-        keys = reduce(lambda x, y: x.union(y.keys()), [inConnections, outConnections], set())
+        keys = list(map(lambda x, y: x.union(y.keys()), [self.inConnections, self.outConnections], set()))
 
         # List of P
         self.p = []
@@ -213,7 +214,36 @@ class PagerankDocScorer():
         # Begin iterations
         for n in range(n_iter):
             for k in range(N):
-                self.p_p = r/N 
+                self.p_p[k] = r/N 
+            for i in self.outConnections:
+                for j in self.outConnections[i]:
+                    self.p_p[i][j] += (1-r) * self.p[i] / len(self.outConnections[i])
+                
+        # a b
+        # a c
+        # r to escape sinkholes 
+        
+        # out connections
+        # a : (b,c)
+        # b : (d,e,f,g)
+        # e : (a, d )
+
+        # keys = a b c 
+        # N = 3
+        # p = (0.3 0.3 0.3)
+        # p' = (1 1 1)
+        # i = a:(b,c)
+        # j = b,c 
+        # p'(a)
+        
+        
+        
+        
+        #dsds
+        # for out in out cons:
+        #     out = a 
+        #     out(0) = b 
+        #     out(1) = c
 
         # Using the union of the keys of each dictionary
         # for k in len(self.inConnections):
@@ -221,11 +251,6 @@ class PagerankDocScorer():
         # for n in range(n_iter):
         #     for k in len(self.inConnections):
         #         support[k] = r/len(self.inConnections)
-
-        # a b
-        # a c
-        # r to escape sinkholes 
-            
         
         # Your new code here (exercise 6) #
         # Format of graphfile:
