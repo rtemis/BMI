@@ -186,10 +186,10 @@ class PagerankDocScorer():
             var = line.split()
             
             # Test to see if connection variable exists 
-            if self.inConnections[var[1]] is None: 
+            if var[1] not in self.inConnections: 
                 self.inConnections[var[1]] = []
 
-            if self.outConnections[var[0]] is None:
+            if var[0] not in self.outConnections: 
                 self.outConnections[var[0]] = []
 
             # Append to list of connections 
@@ -198,8 +198,8 @@ class PagerankDocScorer():
 
         fp.close()
 
-        keys = list(map(lambda x, y: x.union(y.keys()), [self.inConnections, self.outConnections], set()))
-
+        #keys = list(lambda x, y: x.union(y.keys()), [self.inConnections, self.outConnections], set())
+        keys = self.inConnections.keys() | self.outConnections.keys()
         # List of P
         self.p = {}
         # List of P'
@@ -217,48 +217,16 @@ class PagerankDocScorer():
                 self.p_p[k] = r/N 
             for i in self.outConnections:
                 for j in self.outConnections[i]:
-                    self.p_p[j] += (1-r) * self.p[i] / len(self.outConnections[i])
+                    #if j in self.outConnections:
+                        self.p_p[j] += (1-r) * self.p[i] / len(self.outConnections[i])
             for k in keys:
                 self.p[k] = self.p_p[k]
-                
-        # a b
-        # a c
-        # r to escape sinkholes 
-        
-        # out connections
-        # a : (b,c)
-        # b : (d,e,f,g) 
-        # e : (a, d )
+           
+ 
 
-        # keys = a b c 
-        # N = 3
-        # p = (0.3 0.3 0.3)
-        # p' = (1 1 1)
-        # i = a:(b,c)
-        # j = b,c 
-        # p'(a)
-        
-        
-        
-        
-        #dsds
-        # for out in out cons:
-        #     out = a 
-        #     out(0) = b 
-        #     out(1) = c
-
-        # Using the union of the keys of each dictionary
-        # for k in len(self.inConnections):
-        #     pages[k] = 1/len(self.inConnections)
-        # for n in range(n_iter):
-        #     for k in len(self.inConnections):
-        #         support[k] = r/len(self.inConnections)
-        
-        # Your new code here (exercise 6) #
-        # Format of graphfile:
-        #  node1 node2
-        # TODO #
-        pass
     def rank(self, cutoff):
-        # TODO #
-        pass
+        scores = []
+        for k in self.p:
+            scores.append([self.p[k], k])
+        scores.sort(key=lambda tup: tup[0], reverse=True)
+        return scores[:cutoff]
