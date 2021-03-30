@@ -201,23 +201,25 @@ class PagerankDocScorer():
         keys = list(map(lambda x, y: x.union(y.keys()), [self.inConnections, self.outConnections], set()))
 
         # List of P
-        self.p = []
+        self.p = {}
         # List of P'
-        self.p_p = []
+        self.p_p = {}
         
         N = len(keys)
         
         # Initialize all values of P
-        for k in range(N):
+        for k in keys:
             self.p[k] = 1/N
 
         # Begin iterations
         for n in range(n_iter):
-            for k in range(N):
+            for k in keys:
                 self.p_p[k] = r/N 
             for i in self.outConnections:
                 for j in self.outConnections[i]:
-                    self.p_p[i][j] += (1-r) * self.p[i] / len(self.outConnections[i])
+                    self.p_p[j] += (1-r) * self.p[i] / len(self.outConnections[i])
+            for k in keys:
+                self.p[k] = self.p_p[k]
                 
         # a b
         # a c
@@ -225,7 +227,7 @@ class PagerankDocScorer():
         
         # out connections
         # a : (b,c)
-        # b : (d,e,f,g)
+        # b : (d,e,f,g) 
         # e : (a, d )
 
         # keys = a b c 
