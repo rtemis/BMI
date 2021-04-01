@@ -133,7 +133,16 @@ class TermBasedVSMSearcher(Searcher):
                 if doc in postVals:
                     postVals[doc] += self.score(doc, term)  #append score here. Postvals could be a dict. of docids and score.  Then we should just push this dict. in SearchRank
                 else:
-                    postVals[doc] = self.score(doc, term)  
+                    postVals[doc] = self.score(doc, term)
+
+        # ------------------------------ #
+        #for term in qterms:
+            # For each doc in the postings list for that term
+        #    for doc in self.index.postings(term):
+        #        if doc not in postVals:
+        #            postVals[doc] = 0  
+        #        postVals[doc] += self.score(doc, term)
+        # ------------------------------- #  
 
         # Rank each of the scores obtained in the loop
         for key in postVals:
@@ -210,17 +219,23 @@ class PagerankDocScorer():
         # Initialize all values of P
         for k in keys:
             self.p[k] = 1/N
-
+        #print(self.outConnections)
+        sinks = self.inConnections.keys() - self.outConnections.keys()
+        print(sinks)
+        print(len(sinks))
         # Begin iterations
         for n in range(n_iter):
             for k in keys:
                 self.p_p[k] = r/N 
             for i in self.outConnections:
                 for j in self.outConnections[i]:
-                    #if j in self.outConnections:
-                        self.p_p[j] += (1-r) * self.p[i] / len(self.outConnections[i])
+                    self.p_p[j] += ((1-r) * self.p[i] / len(self.outConnections[i])) + ((1-r) * self.p[i] * len(sinks) / N)
             for k in keys:
-                self.p[k] = self.p_p[k]
+                self.p[k] = self.p_p[k]    
+        x=0
+        for k in keys:
+            x += self.p[k]
+        print("Sum of all the rankings is", x , "(should be 1)")        
            
  
 
