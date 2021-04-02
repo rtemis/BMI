@@ -143,21 +143,16 @@ class Builder:
 class RAMIndex(Index):
     def __init__(self, dir):
         super().__init__(dir)
+        self.directory = dir
         self.dictionary = {}
         self.postings = []
-        #push the dictionary
-        # for term in index.all_terms():
-        #     self.postings.append(index.postings(term))
-        # fp=open(Config.POSTINGS_FILE, "w")
-        # fp.write(pickle.dumps(self.postings))
-        # fp.close()
+        self.readRAM()
     
     def readRAM(self):
-        self.postings = pickle.load(Config.POSTINGS_FILE, 'rb')
-        # fp = open(Config.POSTINGS_FILE, "r")
-        # fp.read(pickle.load(self.postings))
-        # ### where to store?
-        # fp.close()
+        # Load index from RAM
+        self.open(self.directory)
+        self.postings = self.modulemap
+
         
     def indexDoc(self, docid, text):
         for term in text.split():
@@ -176,7 +171,10 @@ class RAMIndexBuilder(Builder):
         super().__init__(dir)
         self.directory = dir
         self.index = RAMIndex(dir)
-
+        #push the dictionary
+        # for term in self.index.all_terms():
+        #     self.index.postings.append(self.index.postings(term))
+                
     def index_document(self, path, text):
         docid = self.index.ndocs()
         self.index.add_doc(path)
