@@ -128,12 +128,12 @@ class TermBasedVSMSearcher(Searcher):
         # For each term in the query 
         for term in qterms:
             # For each doc in the postings list for that term
-            for doc, freq in self.index.postings(term):
+            for doc in self.index.postings(term):
                 # Calculate the partial score for that term
-                if doc in postVals:
-                    postVals[doc] += self.score(doc, term)  #append score here. Postvals could be a dict. of docids and score.  Then we should just push this dict. in SearchRank
+                if doc[0] in postVals:
+                    postVals[doc[0]] += self.score(doc[0], term)  #append score here. Postvals could be a dict. of docids and score.  Then we should just push this dict. in SearchRank
                 else:
-                    postVals[doc] = self.score(doc, term)
+                    postVals[doc[0]] = self.score(doc[0], term)
 
         # ------------------------------ #
         #for term in qterms:
@@ -147,7 +147,8 @@ class TermBasedVSMSearcher(Searcher):
         # Rank each of the scores obtained in the loop
         for key in postVals:
             # Heap automatically adjusts to the size of the cutoff list
-            ranking.push(key, postVals[key])
+            mod = self.index.doc_module(key)
+            ranking.push(key, postVals[key]/mod)
 
         # Return the new list
         return ranking.score(self.index)
