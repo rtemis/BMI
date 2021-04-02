@@ -221,15 +221,13 @@ class PagerankDocScorer():
             self.p[k] = 1/N
         #print(self.outConnections)
         sinks = self.inConnections.keys() - self.outConnections.keys()
-        print(sinks)
-        print(len(sinks))
         # Begin iterations
         for n in range(n_iter):
             for k in keys:
-                self.p_p[k] = r/N 
+                self.p_p[k] = (1-r) / N 
             for i in self.outConnections:
                 for j in self.outConnections[i]:
-                    self.p_p[j] += ((1-r) * self.p[i] / len(self.outConnections[i])) + ((1-r) * self.p[i] * len(sinks) / N)
+                    self.p_p[j] += (r * self.p[i] / len(self.outConnections[i])) + (r * self.p[i] * len(sinks) / N)
             for k in keys:
                 self.p[k] = self.p_p[k]    
         x=0
