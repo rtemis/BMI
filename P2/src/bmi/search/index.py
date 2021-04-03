@@ -144,44 +144,81 @@ class RAMIndex(Index):
     def __init__(self, dir):
         super().__init__(dir)
         self.directory = dir
-        self.dictionary = {}
-        self.postings = []
+        self.postingmap = {}
         self.readRAM()
     
     def readRAM(self):
         # Load index from RAM
-        self.open(self.directory)
-        self.postings = self.modulemap
+        p = os.path.join(self.directory, Config.POSTINGS_FILE)
+        with open(p, 'rb') as f: 
+            self.postingmap = pickle.load(f)
 
+        p = os.path.join(self.directory, Config.DICTIONARY_FILE)
+        with open(p, 'rb') as f: 
+            self.docmap = pickle.load(f)
         
-    def indexDoc(self, docid, text):
-        for term in text.split():
-            if term in self.dictionary:
-                if docid in self.dictionary[term]:
-                    self.dictionary[term][docid][1] += 1
-                else:
-                    self.dictionary[term].append([docid, 1])
-            else:
-                self.dictionary[term] = []
-                self.dictionary[term].append([docid, 1])
+        self.compute_modules()
+
+    def all_terms(self):
+        return self.postingmap.keys()
+
+    def postings(self, term):
+        return self.postingmap[term] if term in self.postingmap else []
+        
+    # def indexDoc(self, docid, text):
+    #     for term in text.split():
+    #         if term in self.dictionary:
+    #             if docid in self.dictionary[term]:
+    #                 self.dictionary[term][docid][1] += 1
+    #             else:
+    #                 self.dictionary[term].append([docid, 1])
+    #         else:
+    #             self.dictionary[term] = []
+    #             self.dictionary[term].append([docid, 1])
 
 
 class RAMIndexBuilder(Builder):
     def __init__(self, dir):
         super().__init__(dir)
         self.directory = dir
-        self.index = RAMIndex(dir)
-        #push the dictionary
-        # for term in self.index.all_terms():
-        #     self.index.postings.append(self.index.postings(term))
-                
+        self.postings = {}
+        self.paths = []
+        self.docid = 0
+    
     def index_document(self, path, text):
-        docid = self.index.ndocs()
-        self.index.add_doc(path)
-        self.index.indexDoc(docid, text)            
+        # CREATE POSTINGS LIST
+        # for pos, term in enumerate(text.split()):
+        #     if term not in self.postings:
+        #         self.postings[term] = []
+        #     self.postings[term].append([self.docid, pos])
+        auxTermFreq = {}
+        for term in text.split():
+            if term in self.postings:
+                if (term, self.docid) in auxTermFreq:
+                    auxTermFreq[(term, self.docid)][1] += 1
+                else:
+                    post = [self.docid, 1]
+                    self.postings[term].append(post)
+                    auxTermFreq[(term, self.docid)] = post
+            else:
+                post = [self.docid, 1]
+                self.postings[term] = [post]
+                auxTermFreq[(term, self.docid)] = post
+        # Increment doc number
+        self.paths.append(path)
+        self.docid += 1
 
     def commit(self):
-        self.index.save(self.directory)
+        # dump postings to file
+        p = os.path.join(self.directory, Config.POSTINGS_FILE)
+        with open(p, 'wb') as f:
+            pickle.dump(self.postings, f)  
+
+        p = os.path.join(self.directory, Config.DICTIONARY_FILE)
+        with open(p, 'wb') as f:
+            pickle.dump(self.paths, f)
+        
+
 
 class DiskIndex(Index):
     # Your new code here (exercise 3*) #
