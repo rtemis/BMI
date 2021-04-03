@@ -160,21 +160,65 @@ class TermBasedVSMSearcher(Searcher):
 
 
 class DocBasedVSMSearcher(Searcher):
-    def __init__(self, index, parser=BasicParser()):
-        super().__init__(index, parser)
+    #def __init__(self, index, parser=BasicParser()):
+    #    super().__init__(index, parser)
+    def __init__(self, cutoff):
+        self.postingsHeap = []
+        heapq.heapify(self.postingsHeap)
     
     # Your new code here (exercise 1.2*) #
     def search(self, query, cutoff):
         qterms = self.parser.parse(query)
-        ranking = SearchRanking(cutoff)
-        
+        #ranking = SearchRanking(cutoff)
+        k=0
+        y=0
+        self.allPostings = []
         for term in qterms:
-            for doc, freq in self.index.postings(term):
-                ranking.push(doc, )
+            k += 1
+            post = self.index.postings(term)
+            for postings in post:
+                self.allPostings.append([postings[0], postings[1], k])  #[0] is the docid, [1] is the freq, and k is just the indices of the query term
+        self.allPostings.sort(key=lambda tup: tup[0], reverse=False) #order the array of all the postings from the minor to the mayor docid
+        #inizialize the postings' heap
+        support_allPostings = self.allPostings
+        for x in range(k):    
+            for tup in support_allPostings:
+                if x==tup[2]:
+                    #push the tuple in the tree
+                    heapq.heappush(self.postingsHeap, tup)
+                    self.allPostings.remove(tup)
+                    break 
+        support_allPostings = self.allPostings
+        
+        fOutTup = heapq.heappop(self.postingsHeap)
+        temp = fOutTup[1]
+        for inTup in support_allPostings:
+            if fOutTup[2]==inTup[2]:
+                heapq.heappush(self.postingsHeap, inTup)
+                self.allPostings.remove(inTup)
+        support_allPostings = self.allPostings
 
-        scores = ranking.score()
-
-        return scores #return a searchRanking also here.
+        while(True):
+            sOutTup = heapq.heappop(self.postingsHeap)
+            if(sOutTup[0]==fOutTup[0]):
+                temp += sOutTup[1]
+            else:
+                score = temp/len(fOutTup[0]) , fOutTup[0] #here i append the score with the docid(tup[0])
+                #here I have to divide temp for the length of the document (fOutTup[0]) and this will be the score (len above is just a reminder, i know ther's another method)
+                #my idea of scores is an array of tuples [score, docid]
+                #another possible thing is to push this tuple directly at line 31
+            if not self.allPostings:  #check if there are some postings left to push
+                for inTup in support_allPostings:
+                    if fOutTup[2]==inTup[2]:
+                        heapq.heappush(self.postingsHeap, inTup)
+                        self.allPostings.remove(inTup)
+                support_allPostings = self.allPostings
+            else:  #postings list is empty and the tree has exactly len(query) nodes. I just have to count these iterations and finish
+                y +=1
+                if y==k: #condition for the last k pops, if y has reached k, this means that the tree is empty
+                    break
+        
+    return score #return a searchRanking also here.
     
 
 class ProximitySearcher(Searcher):
