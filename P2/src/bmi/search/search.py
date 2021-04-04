@@ -169,23 +169,24 @@ class DocBasedVSMSearcher(Searcher):
     # Your new code here (exercise 1.2*) #
     def search(self, query, cutoff):
         qterms = self.parser.parse(query)
-        #ranking = SearchRanking(cutoff)
+        ranking = SearchRanking(cutoff)
         k=0
         y=0
+        temp=0
+        score = {}
         self.allPostings = []
         for term in qterms:
             k += 1
             post = self.index.postings(term)
             for postings in post:
                 self.allPostings.append([postings[0], postings[1], k])  #[0] is the docid, [1] is the freq, and k is just the indices of the query term
-        self.allPostings.sort(key=lambda tup: tup[0], reverse=False) #order the array of all the postings from the minor to the mayor docid
+        self.allPostings.sort(key=lambda tup: tup[0], reverse=False) #order the array of all the postings from the smallest to the biggest docid
         #inizialize the postings' heap
         support_allPostings = self.allPostings
-        for x in range(k):    
+        for x in range(1, k+1):    
             for tup in support_allPostings:
                 if x==tup[2]:
-                    #push the tuple in the tree
-                    heapq.heappush(self.postingsHeap, tup)
+                    heapq.heappush(self.postingsHeap, tup) #push the tuple in the tree
                     self.allPostings.remove(tup)
                     break 
         support_allPostings = self.allPostings
@@ -196,6 +197,7 @@ class DocBasedVSMSearcher(Searcher):
             if fOutTup[2]==inTup[2]:
                 heapq.heappush(self.postingsHeap, inTup)
                 self.allPostings.remove(inTup)
+                break
         support_allPostings = self.allPostings
 
         while(True):
@@ -203,22 +205,24 @@ class DocBasedVSMSearcher(Searcher):
             if(sOutTup[0]==fOutTup[0]):
                 temp += sOutTup[1]
             else:
-                score = temp/len(fOutTup[0]) , fOutTup[0] #here i append the score with the docid(tup[0])
-                #here I have to divide temp for the length of the document (fOutTup[0]) and this will be the score (len above is just a reminder, i know ther's another method)
-                #my idea of scores is an array of tuples [score, docid]
-                #another possible thing is to push this tuple directly at line 31
-            if not self.allPostings:  #check if there are some postings left to push
+                score[fOutTup[0]] = temp / self.index.doc_module(fOutTup[0])
+                temp = sOutTup[1]
+            if self.allPostings:  #check if there are some postings left to push
                 for inTup in support_allPostings:
-                    if fOutTup[2]==inTup[2]:
+                    if sOutTup[2]==inTup[2]:  #push a posting for the same term
                         heapq.heappush(self.postingsHeap, inTup)
                         self.allPostings.remove(inTup)
+                        break
                 support_allPostings = self.allPostings
             else:  #postings list is empty and the tree has exactly len(query) nodes. I just have to count these iterations and finish
                 y +=1
                 if y==k: #condition for the last k pops, if y has reached k, this means that the tree is empty
                     break
+            fOutTup=sOutTup
+        for key in score:
+            ranking.push(key, score[key])
         
-        return score #return a searchRanking also here.
+        return ranking.score(self.index) #return a searchRanking also here.
     
 
 class ProximitySearcher(Searcher):
@@ -274,11 +278,7 @@ class PagerankDocScorer():
                 for j in self.outConnections[i]:
                     self.p_p[j] += (r * self.p[i] / len(self.outConnections[i])) + (r * self.p[i] * len(sinks) / N)
             for k in keys:
-                self.p[k] = self.p_p[k]    
-        x=0
-        for k in keys:
-            x += self.p[k]
-        print("Sum of all the rankings is", x , "(should be 1)")        
+                self.p[k] = self.p_p[k]           
            
  
 
