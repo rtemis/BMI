@@ -31,8 +31,8 @@ from whooshy import (
 def main():
     index_root_dir = "./index/"
     collections_root_dir = "./data/collections/"
-    test_collection (collections_root_dir + "toy1/", index_root_dir + "toy1/", "cc", ["aa dd", "aa"], False)
-    test_collection (collections_root_dir + "toy2/", index_root_dir + "toy2/", "aa", ["aa cc", "bb aa"], False)
+    test_collection (collections_root_dir + "toy1/", index_root_dir + "toy1/", "cc", ["aa dd", "aa"], True)
+    test_collection (collections_root_dir + "toy2/", index_root_dir + "toy2/", "aa", ["aa cc", "bb aa"], True)
     test_collection (collections_root_dir + "urls.txt", index_root_dir + "urls/", "wikipedia", ["information probability", "probability information", "higher probability"], True)
     test_collection (collections_root_dir + "docs1k.zip", index_root_dir + "docs1k/", "seat", ["obama family tree"], True)
     test_collection (collections_root_dir + "docs10k.zip", index_root_dir + "docs10k/", "seat", ["obama family tree"], True)
