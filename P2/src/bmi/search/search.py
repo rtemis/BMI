@@ -218,7 +218,7 @@ class DocBasedVSMSearcher(Searcher):
                 if y==k: #condition for the last k pops, if y has reached k, this means that the tree is empty
                     break
         
-    return score #return a searchRanking also here.
+        return score #return a searchRanking also here.
     
 
 class ProximitySearcher(Searcher):
