@@ -130,10 +130,10 @@ class TermBasedVSMSearcher(Searcher):
             # For each doc in the postings list for that term
             for doc in self.index.postings(term):
                 # Calculate the partial score for that term
-                if doc[0] in postVals:
-                    postVals[doc[0]] += self.score(doc[0], term)  #append score here. Postvals could be a dict. of docids and score.  Then we should just push this dict. in SearchRank
-                else:
-                    postVals[doc[0]] = self.score(doc[0], term)
+                if doc[0] not in postVals:
+                    postVals[doc[0]] = 0  #append score here. Postvals could be a dict. of docids and score.  Then we should just push this dict. in SearchRank
+                
+                postVals[doc[0]] += self.score(doc[0], term)
 
         # ------------------------------ #
         #for term in qterms:
@@ -160,65 +160,77 @@ class TermBasedVSMSearcher(Searcher):
 
 
 class DocBasedVSMSearcher(Searcher):
-    #def __init__(self, index, parser=BasicParser()):
-    #    super().__init__(index, parser)
-    def __init__(self, cutoff):
+    def __init__(self, index, parser=BasicParser()):
+        super().__init__(index, parser)
         self.postingsHeap = []
         heapq.heapify(self.postingsHeap)
-    
+        
     # Your new code here (exercise 1.2*) #
     def search(self, query, cutoff):
         qterms = self.parser.parse(query)
         ranking = SearchRanking(cutoff)
-        k=0
-        y=0
-        temp=0
+        k = 0
+        y = 0
+        temp = 0
         score = {}
-        self.allPostings = []
-        for term in qterms:
+        allPostings = []
+        support_allPostings = []
+        # Leah testings
+#        scores = {}
+
+#        for term in qterms:
+ #           for post in self.index.postings(term):
+  #              if post[0] in scores:
+
+        for i, term in enumerate(qterms):
+            for post in self.index.postings(term):
+                allPostings.append([post[0], post[1], i])  #[0] is the docid, [1] is the freq, and k is just the indices of the query term
             k += 1
-            post = self.index.postings(term)
-            for postings in post:
-                self.allPostings.append([postings[0], postings[1], k])  #[0] is the docid, [1] is the freq, and k is just the indices of the query term
-        self.allPostings.sort(key=lambda tup: tup[0], reverse=False) #order the array of all the postings from the smallest to the biggest docid
+            
+        allPostings.sort(key=lambda tup: tup[0], reverse=False) #order the array of all the postings from the smallest to the biggest docid
         #inizialize the postings' heap
-        support_allPostings = self.allPostings
-        for x in range(1, k+1):    
+        
+        support_allPostings = allPostings
+
+        for j in range(len(qterms)):    
             for tup in support_allPostings:
-                if x==tup[2]:
+                if j == tup[2]:
                     heapq.heappush(self.postingsHeap, tup) #push the tuple in the tree
-                    self.allPostings.remove(tup)
-                    break 
-        support_allPostings = self.allPostings
+                    allPostings.remove(tup)
+                    break
         
         fOutTup = heapq.heappop(self.postingsHeap)
         temp = fOutTup[1]
+        
         for inTup in support_allPostings:
-            if fOutTup[2]==inTup[2]:
+            if fOutTup[2] == inTup[2]:
                 heapq.heappush(self.postingsHeap, inTup)
-                self.allPostings.remove(inTup)
+                allPostings.remove(inTup)
                 break
-        support_allPostings = self.allPostings
 
-        while(True):
+        while(y < k):
+            print (y,k)
+            if len(self.postingsHeap) == 0:
+                break
             sOutTup = heapq.heappop(self.postingsHeap)
-            if(sOutTup[0]==fOutTup[0]):
+            print(fOutTup, sOutTup)
+            
+            if sOutTup[0] == fOutTup[0]:
                 temp += sOutTup[1]
             else:
                 score[fOutTup[0]] = temp / self.index.doc_module(fOutTup[0])
                 temp = sOutTup[1]
-            if self.allPostings:  #check if there are some postings left to push
+            
+            if len(support_allPostings) != 0:
                 for inTup in support_allPostings:
-                    if sOutTup[2]==inTup[2]:  #push a posting for the same term
+                    if sOutTup[2] == inTup[2]:  #push a posting for the same term
                         heapq.heappush(self.postingsHeap, inTup)
-                        self.allPostings.remove(inTup)
+                        allPostings.remove(inTup)
                         break
-                support_allPostings = self.allPostings
             else:  #postings list is empty and the tree has exactly len(query) nodes. I just have to count these iterations and finish
-                y +=1
-                if y==k: #condition for the last k pops, if y has reached k, this means that the tree is empty
-                    break
-            fOutTup=sOutTup
+                y += 1
+            fOutTup = sOutTup
+
         for key in score:
             ranking.push(key, score[key])
         

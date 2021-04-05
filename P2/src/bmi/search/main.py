@@ -74,7 +74,7 @@ def test_collection(collection_path: str, index_path: str, word: str, queries: l
             # our searchers should work with any other index
             test_search(SlowVSMSearcher(index), index, query, 5)
             test_search(TermBasedVSMSearcher(index), index, query, 5)
-            # test_search(DocBasedVSMSearcher(index), index, query, 5)
+            test_search(DocBasedVSMSearcher(index), index, query, 5)
         # test_search(ProximitySearcher(PositionalIndex(index_path + "pos")), PositionalIndex(index_path + "pos"), query, 5)
 
     # if we keep the list in memory, there may be problems with accessing the same index twice
