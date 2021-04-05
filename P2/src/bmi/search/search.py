@@ -175,24 +175,17 @@ class DocBasedVSMSearcher(Searcher):
         score = {}
         allPostings = []
         support_allPostings = []
-        # Leah testings
-#        scores = {}
-
-#        for term in qterms:
- #           for post in self.index.postings(term):
-  #              if post[0] in scores:
-
-        for i, term in enumerate(qterms):
+        
+        for term in qterms:
             for post in self.index.postings(term):
-                allPostings.append([post[0], post[1], i])  #[0] is the docid, [1] is the freq, and k is just the indices of the query term
+                allPostings.append([post[0], post[1], k, term])  #[0] is the docid, [1] is the freq, and k is just the indices of the query term
             k += 1
             
         allPostings.sort(key=lambda tup: tup[0], reverse=False) #order the array of all the postings from the smallest to the biggest docid
         #inizialize the postings' heap
         
         support_allPostings = allPostings
-
-        for j in range(len(qterms)):    
+        for j in range(len(qterms) + 1):
             for tup in support_allPostings:
                 if j == tup[2]:
                     heapq.heappush(self.postingsHeap, tup) #push the tuple in the tree
@@ -200,27 +193,26 @@ class DocBasedVSMSearcher(Searcher):
                     break
         
         fOutTup = heapq.heappop(self.postingsHeap)
-        temp = fOutTup[1]
+        temp = self.score(fOutTup[0], fOutTup[3])
         
         for inTup in support_allPostings:
             if fOutTup[2] == inTup[2]:
                 heapq.heappush(self.postingsHeap, inTup)
                 allPostings.remove(inTup)
                 break
-
-        while(y < k):
-            print (y,k)
+        
+        while(y <= k):
+            sOutTup = heapq.heappop(self.postingsHeap)
+             
+            if sOutTup[0] == fOutTup[0]:
+                temp += self.score(sOutTup[0], sOutTup[3])
+            else:
+                score[fOutTup[0]] = temp
+                temp = self.score(sOutTup[0], sOutTup[3])
+            
             if len(self.postingsHeap) == 0:
                 break
-            sOutTup = heapq.heappop(self.postingsHeap)
-            print(fOutTup, sOutTup)
-            
-            if sOutTup[0] == fOutTup[0]:
-                temp += sOutTup[1]
-            else:
-                score[fOutTup[0]] = temp / self.index.doc_module(fOutTup[0])
-                temp = sOutTup[1]
-            
+
             if len(support_allPostings) != 0:
                 for inTup in support_allPostings:
                     if sOutTup[2] == inTup[2]:  #push a posting for the same term
@@ -231,11 +223,18 @@ class DocBasedVSMSearcher(Searcher):
                 y += 1
             fOutTup = sOutTup
 
+        score[sOutTup[0]] = temp
         for key in score:
-            ranking.push(key, score[key])
+            mod = self.index.doc_module(key)
+            ranking.push(key, score[key]/mod)
         
         return ranking.score(self.index) #return a searchRanking also here.
     
+    def score(self, docid, term):
+        return tf(self.index.term_freq(term, docid)) \
+                    * idf(self.index.doc_freq(term), self.index.ndocs())
+
+
 
 class ProximitySearcher(Searcher):
     # Your new code here (exercise 4*) #
