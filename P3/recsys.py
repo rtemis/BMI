@@ -58,6 +58,22 @@ class Ranking:
         self.topn = topn
         self.changed = 0
 
+    #     self.heap = []
+    #     self.topn = topn
+
+    # def add(self, item, score):
+    #     if (len(self.heap) < self.topn) or (score > self.heap[0][0]):
+    #         if len(self.heap) == self.topn:
+    #             heapq.heappop(self.heap)
+    #         heapq.heappush(self.heap, (score, item))
+
+    # def __iter__(self):
+    #     h = self.heap.copy()
+    #     ranking = []
+    #     while h:
+    #         ranking.append(heapq.heappop(h)[::-1])
+    #     return reversed(ranking)
+
     def add(self, item, score):
         scored_item = self.ScoredItem((score, item))
         if len(self.heap) < self.topn:
