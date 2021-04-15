@@ -28,8 +28,8 @@ def main():
 def toy_test(dataset, separator='\t'):
     training = Ratings(dataset + "-train.dat", separator)
     test = Ratings(dataset + "-test.dat", separator)
-    metrics = [Precision(test, cutoff=4, threshold=4), Recall(test, cutoff=4, threshold=4)]
-    evaluate_recommenders(training, metrics, k=4, min=2, topn=4)
+    # metrics = [Precision(test, cutoff=4, threshold=4), Recall(test, cutoff=4, threshold=4)]
+    # evaluate_recommenders(training, metrics, k=4, min=2, topn=4)
 
 
 # More complete testing on a generic dataset

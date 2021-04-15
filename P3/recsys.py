@@ -115,8 +115,8 @@ class Ranking:
             self.changed = 1
 
     def __iter__(self):
+        self.ranking = []
         if self.changed:
-            self.ranking = []
             h = self.heap.copy()
             while h:
                 self.ranking.append(heapq.heappop(h).element[::-1])
@@ -144,22 +144,24 @@ class Recommender(ABC):
     def recommend(self, topn):
         ratingsDict = {}
         userRatings = {}
-
+        
         for i in self.training.itemDict.keys():
             avg = 0
             for user in self.training.itemDict[i]:
                 avg += self.training.itemDict[i][user]
-
             ratingsDict[i] = avg/len(self.training.itemDict[i])
 
         for item in ratingsDict.keys():
+            ranking = Ranking(topn)
+            
             for user in self.training.userDict:
                 temp = []
                 if item not in self.training.userDict[user].keys():
-                    temp.append([item, ratingsDict[item]])
-                temp.sort(key=lambda tup: tup[1], reverse=True)
-                temp = temp[:topn]
-                userRatings[user] = temp
+                    ranking.add(item, ratingsDict[item])
+                # temp.sort(key=lambda tup: tup[1], reverse=True)
+                # temp = temp[:topn]
+
+                userRatings[user] = ranking.__repr__()
 
         return userRatings
 
