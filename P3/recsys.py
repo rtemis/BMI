@@ -9,23 +9,69 @@
 """
 
 import heapq
+import random
+import math 
 from abc import ABC, abstractmethod
+
 
 
 class Ratings:
     def __init__(self, file="", delim='\t'):
-        """ Completar """
+        self.userDict = {}
+        self.itemDict = {}
+
+        with open(file, 'r') as fp:
+            for line in fp.readlines():
+                d = line.split(delim)
+                if int(d[0]) not in self.userDict.keys():
+                    self.userDict[int(d[0])] = {}
+                self.userDict[int(d[0])][int(d[1])] = float(d[2])
+                if int(d[1]) not in self.itemDict.keys():
+                    self.itemDict[int(d[1])] = {}
+                self.itemDict[int(d[1])][int(d[0])] = float(d[2])
+
 
     def rate(self, user, item, rating):
-        """ Completar """
+        if user not in self.userDict.keys():
+            self.userDict[user] = {}
+        self.userDict[user][item] = rating
 
     def rating(self, user, item):
-        """ Completar """
+        if item in self.userDict[user].keys():
+            return self.userDict[user][item]
+        return 0
 
     def random_split(self, ratio):
-        """ Completar """
+        all_records = []
 
-    """ Y completar... """
+        for user in self.userDict.keys():
+            for item in self.userDict[user].keys():
+                all_records.append([user, item, self.userDict[user][item]])
+
+        split = int(ratio*len(all_records))
+
+        random.shuffle(all_records)
+
+        return all_records[:split], all_records[split:]
+
+    def nratings(self):
+        ratings = 0
+        for user in self.userDict.keys():
+            ratings += len(self.userDict[user].keys())
+
+        return ratings
+
+    def users(self):
+        return self.userDict.keys()
+
+    def items(self):
+        return self.itemDict.keys()
+
+    def user_items(self, user):
+        return self.userDict[user]
+    
+    def item_users(self, item):
+        return self.itemDict[item]
 
 
 class Ranking:
@@ -57,22 +103,6 @@ class Ranking:
         self.heap = []
         self.topn = topn
         self.changed = 0
-
-    #     self.heap = []
-    #     self.topn = topn
-
-    # def add(self, item, score):
-    #     if (len(self.heap) < self.topn) or (score > self.heap[0][0]):
-    #         if len(self.heap) == self.topn:
-    #             heapq.heappop(self.heap)
-    #         heapq.heappush(self.heap, (score, item))
-
-    # def __iter__(self):
-    #     h = self.heap.copy()
-    #     ranking = []
-    #     while h:
-    #         ranking.append(heapq.heappop(h)[::-1])
-    #     return reversed(ranking)
 
     def add(self, item, score):
         scored_item = self.ScoredItem((score, item))
@@ -112,8 +142,26 @@ class Recommender(ABC):
         """ Core scoring function of the recommendation algorithm """
 
     def recommend(self, topn):
-        """ Completar """
+        ratingsDict = {}
+        userRatings = {}
 
+        for i in self.training.itemDict.keys():
+            avg = 0
+            for user in self.training.itemDict[i]:
+                avg += self.training.itemDict[i][user]
+
+            ratingsDict[i] = avg/len(self.training.itemDict[i])
+
+        for item in ratingsDict.keys():
+            for user in self.training.userDict:
+                temp = []
+                if item not in self.training.userDict[user].keys():
+                    temp.append([item, ratingsDict[item]])
+                temp.sort(key=lambda tup: tup[1], reverse=True)
+                temp = temp[:topn]
+                userRatings[user] = temp
+
+        return userRatings
 
 class RandomRecommender(Recommender):
     def score(self, user, item):
