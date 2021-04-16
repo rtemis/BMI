@@ -152,7 +152,7 @@ class Recommender(ABC):
             if len(self.training.itemDict[i]) >= 2: #in the main he says to consider only film with 2 or more ratings (line 22 calls line 36 that calls line 57) and also in the 4th last line of the enunciado in point 1 "minimo de ratings"
             
             #TODO above here I've put 2 because I've read it from the main, we've to find a way to retrieve the parameter :)
-            #commit test
+            
                 ratingsDict[i] = avg/len(self.training.itemDict[i]) 
         for user in self.training.userDict.keys():
             ranking = Ranking(topn)
