@@ -130,7 +130,7 @@ class Ranking:
         return r[0:-1] + ">"
 
 
-class Recommender(ABC):
+class Recommender(ABC):         
     def __init__(self, training):
         self.training = training
 
@@ -149,20 +149,17 @@ class Recommender(ABC):
             avg = 0
             for user in self.training.itemDict[i]:
                 avg += self.training.itemDict[i][user]
-            ratingsDict[i] = avg/len(self.training.itemDict[i])
-
-        for item in ratingsDict.keys():
-            ranking = Ranking(topn)
+            if len(self.training.itemDict[i]) >= 2: #in the main he says to consider only film with 2 or more ratings (line 22 calls line 36 that calls line 57) and also in the 4th last line of the enunciado in point 1 "minimo de ratings"
             
-            for user in self.training.userDict:
-                temp = []
+            #TODO above here I've put 2 because I've read it from the main, we've to find a way to retrieve the parameter :)
+
+                ratingsDict[i] = avg/len(self.training.itemDict[i]) 
+        for user in self.training.userDict.keys():
+            ranking = Ranking(topn)
+            for item in ratingsDict.keys():
                 if item not in self.training.userDict[user].keys():
                     ranking.add(item, ratingsDict[item])
-                # temp.sort(key=lambda tup: tup[1], reverse=True)
-                # temp = temp[:topn]
-
-                userRatings[user] = ranking.__repr__()
-
+            userRatings[user] = ranking.__repr__()
         return userRatings
 
 class RandomRecommender(Recommender):
