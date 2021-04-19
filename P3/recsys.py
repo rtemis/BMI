@@ -137,6 +137,7 @@ class Recommender(ABC):
     def __repr__(self):
         return type(self).__name__
 
+#class AverageRecommender(Recommender):
     @abstractmethod
     def score(self, user, item):
         """ Core scoring function of the recommendation algorithm """
@@ -175,10 +176,22 @@ class MajorityRecommender(Recommender):
     def score(self, user, item):
         return sum(rating >= self.threshold for user, rating in self.training.item_users(item).items())
 
+class UserKNNRecommender(Recommender):
+    pass
+
+class NormUserKNNRecommender(Recommender):
+    pass
+
 
 class UserSimilarity(ABC):
     @abstractmethod
     def sim(self, user1, user2):
+        sum=0
+        div=0
+        for item in self.userDict[user1] and self.userDict[user2]:
+            sum += self.userDict[user1][item] * self.userDict[user2][item]
+            div += self.userDict[user1][item] ** 2 + self.userDict[user2][item] ** 2
+        return sum / (div ** 0,5)
         """ Computation of user-user similarity metric """
 
 
