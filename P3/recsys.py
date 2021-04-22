@@ -137,20 +137,25 @@ class Recommender(ABC):
     def __repr__(self):
         return type(self).__name__
 
-#class AverageRecommender(Recommender):
     @abstractmethod
     def score(self, user, item):
         """ Core scoring function of the recommendation algorithm """
+    
 
-    def recommend(self, topn):
+class AverageRecommender(Recommender):
+    def __init__(self, ratings, min):
+        super().__init__(ratings)
+        self.min = min
+    
+    def recommend(self,topn):
         ratingsDict = {}
         userRatings = {}
-        
         for i in self.training.itemDict.keys():
             avg = 0
-            for user in self.training.itemDict[i]:
-                avg += self.training.itemDict[i][user]
-            if len(self.training.itemDict[i]) >= 2: #in the main he says to consider only film with 2 or more ratings (line 22 calls line 36 that calls line 57) and also in the 4th last line of the enunciado in point 1 "minimo de ratings"
+            for u in self.training.itemDict[i]:
+                avg += self.score(u, i)
+            
+            if len(self.training.itemDict[i]) >= self.min: #in the main he says to consider only film with 2 or more ratings (line 22 calls line 36 that calls line 57) and also in the 4th last line of the enunciado in point 1 "minimo de ratings"
             
             #TODO above here I've put 2 because I've read it from the main, we've to find a way to retrieve the parameter :)
             
@@ -163,9 +168,23 @@ class Recommender(ABC):
             userRatings[user] = ranking.__repr__()
         return userRatings
 
+    def score(self, user, item):
+        return self.training.itemDict[item][user]
+        #return sum((rating for rating in self.training.itemDict[item][user]) / len(self.training.itemDict[item].keys()))
+    
+
 class RandomRecommender(Recommender):
     def score(self, user, item):
         return random.random()
+    def recommend(self,topn):
+        userRatings = {}
+        for user in self.training.userDict.keys():
+            ranking = Ranking(topn)
+            for item in self.training.itemDict.keys():
+                if item not in self.training.userDict[user].keys():
+                    ranking.add(item, self.score(user,item))
+            userRatings[user] = ranking.__repr__()
+        return userRatings
 
 
 class MajorityRecommender(Recommender):
@@ -175,25 +194,66 @@ class MajorityRecommender(Recommender):
 
     def score(self, user, item):
         return sum(rating >= self.threshold for user, rating in self.training.item_users(item).items())
+    
+    def recommend(self,topn):
+        userRatings = {}
+        for user in self.training.userDict.keys():
+            ranking = Ranking(topn)
+            for item in self.training.itemDict.keys():
+                if item not in self.training.userDict[user].keys():
+                    ranking.add(item, self.score(user,item))
+            userRatings[user] = ranking.__repr__()
+        return userRatings
 
 class UserKNNRecommender(Recommender):
-    pass
+    def __init__(self, ratings, sim, k):
+        super().__init__(ratings)
+        self.sim = sim
+        self.k = k
+    def score(self, user, item):
+        similarities = []
+        for user2 in self.training.itemDict[item].keys():
+            similarities.append([self.sim.sim(user,user2),user2])
+        similarities.sort(key=lambda tup: tup[0], reverse=True)
+        #for tup in similarities[:k]:
+
+        return sum(simv * self.training.itemDict[item][v] for simv, v in similarities) 
+    
+    def recommend(self,topn):
+        userRatings = {}
+        for user in self.training.userDict.keys():
+            ranking = Ranking(topn)
+            for item in self.training.itemDict.keys():
+                if item not in self.training.userDict[user].keys():
+                    ranking.add(item, self.score(user,item))
+            userRatings[user] = ranking.__repr__()
+        return userRatings
 
 class NormUserKNNRecommender(Recommender):
     pass
-
-
+    
 class UserSimilarity(ABC):
+    def __init__(self, training):
+        self.training = training
     @abstractmethod
+    def sim(self, user1, user2):
+        """ Computation of user-user similarity metric """    
+
+class CosineUserSimilarity(UserSimilarity):
     def sim(self, user1, user2):
         sum=0
         div=0
-        for item in self.userDict[user1] and self.userDict[user2]:
-            sum += self.userDict[user1][item] * self.userDict[user2][item]
-            div += self.userDict[user1][item] ** 2 + self.userDict[user2][item] ** 2
-        return sum / (div ** 0,5)
-        """ Computation of user-user similarity metric """
-
+        items = []
+        for item in self.training.userDict[user1].keys():
+            if item in self.training.userDict[user2].keys():
+                items.append(item)
+        for item in items:
+            sum += self.training.userDict[user1][item] * self.training.userDict[user2][item]
+            div += self.training.userDict[user1][item] ** 2 + self.training.userDict[user2][item] ** 2
+        if div == 0:
+            return 0
+        return sum / (float(div) ** 0.5)
+    
 
 class Metric(ABC):
     def __init__(self, test, cutoff):
