@@ -155,10 +155,7 @@ class AverageRecommender(Recommender):
             for u in self.training.itemDict[i]:
                 avg += self.score(u, i)
             
-            if len(self.training.itemDict[i]) >= self.min: #in the main he says to consider only film with 2 or more ratings (line 22 calls line 36 that calls line 57) and also in the 4th last line of the enunciado in point 1 "minimo de ratings"
-            
-            #TODO above here I've put 2 because I've read it from the main, we've to find a way to retrieve the parameter :)
-            
+            if len(self.training.itemDict[i]) >= self.min: 
                 ratingsDict[i] = avg/len(self.training.itemDict[i]) 
         for user in self.training.userDict.keys():
             ranking = Ranking(topn)
@@ -215,8 +212,7 @@ class UserKNNRecommender(Recommender):
         for user2 in self.training.itemDict[item].keys():
             similarities.append([self.sim.sim(user,user2),user2])
         similarities.sort(key=lambda tup: tup[0], reverse=True)
-        #for tup in similarities[:k]:
-
+        #TODO for the first example is ok, but how we're handling the first top k element?   #for tup in similarities[:k]:   
         return sum(simv * self.training.itemDict[item][v] for simv, v in similarities) 
     
     def recommend(self,topn):
@@ -229,8 +225,40 @@ class UserKNNRecommender(Recommender):
             userRatings[user] = ranking.__repr__()
         return userRatings
 
-class NormUserKNNRecommender(Recommender):
-    pass
+class NormUserKNNRecommender(Recommender):   #working with wrong output, the sum of the similarities it's <1 and all the NORMrecommendations are higher than the NOT-NORMrecommendations( they shoud be all lower).
+    def __init__(self, ratings, sim, k, min):
+        super().__init__(ratings)
+        self.sim = sim
+        self.k = k
+        self.min = min
+    def score(self, user, item):
+        x=0
+        similarities = []
+        for user2 in self.training.itemDict[item].keys():
+            if len(self.training.userDict[user2].keys()) >= self.k:
+                similarities.append([self.sim.sim(user,user2),user2])
+                #print('similarity between user',user,'and user',user2, 'is',self.sim.sim(user,user2) )   debugging, please leave it here unless you don't fix it
+                x += self.sim.sim(user,user2)  #sum of all the similarities(referring to only one item)
+            else:
+                similarities.append([0,user2])
+        #print('244',user, x)   debugging, please leave it here unless you don't fix it
+        similarities.sort(key=lambda tup: tup[0], reverse=True)
+        #TODO for the first example is ok, but how we're handling the first top k element?   #for tup in similarities[:k]:
+        for simv, v in similarities:
+            #print('248',simv,self.training.itemDict[item][v],v,item)  debugging, please leave it here unless you don't fix it
+        if x == 0:
+            return (sum(simv * self.training.itemDict[item][v] for simv, v in similarities))  
+        return (sum(simv * self.training.itemDict[item][v] for simv, v in similarities)) / x  #normalizing for that sum, if I sum all the "simv" parameters it's the same result
+    
+    def recommend(self,topn):
+        userRatings = {}
+        for user in self.training.userDict.keys():
+            ranking = Ranking(topn)
+            for item in self.training.itemDict.keys():
+                if item not in self.training.userDict[user].keys():
+                    ranking.add(item, self.score(user,item))
+            userRatings[user] = ranking.__repr__()
+        return userRatings
     
 class UserSimilarity(ABC):
     def __init__(self, training):
@@ -242,15 +270,24 @@ class UserSimilarity(ABC):
 class CosineUserSimilarity(UserSimilarity):
     def sim(self, user1, user2):
         sum=0
+        x=0
         div=0
+        div1=0
+        div2=0
         items = []
         for item in self.training.userDict[user1].keys():
             if item in self.training.userDict[user2].keys():
                 items.append(item)
         for item in items:
             sum += self.training.userDict[user1][item] * self.training.userDict[user2][item]
-            div += self.training.userDict[user1][item] ** 2 + self.training.userDict[user2][item] ** 2
-        if div == 0:
+        for item in self.training.userDict[user1].keys():
+            x = (self.training.userDict[user1][item])*(self.training.userDict[user1][item]) #** 2
+            div1 += x
+        for item in self.training.userDict[user2].keys():
+            x = (self.training.userDict[user2][item])*(self.training.userDict[user2][item]) #** 2
+            div2 += x
+        div=div1*div2
+        if div1 == 0 or div2 == 0:
             return 0
         return sum / (float(div) ** 0.5)
     
