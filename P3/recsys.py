@@ -243,8 +243,8 @@ class NormUserKNNRecommender(Recommender):   #working with wrong output, the sum
                 similarities.append([0,user2])
         #print('244',user, x)   debugging, please leave it here unless you don't fix it
         similarities.sort(key=lambda tup: tup[0], reverse=True)
-        #TODO for the first example is ok, but how we're handling the first top k element?   #for tup in similarities[:k]:
-        for simv, v in similarities:
+        
+        #for simv, v in similarities:
             #print('248',simv,self.training.itemDict[item][v],v,item)  debugging, please leave it here unless you don't fix it
         if x == 0:
             return (sum(simv * self.training.itemDict[item][v] for simv, v in similarities))  
@@ -259,7 +259,61 @@ class NormUserKNNRecommender(Recommender):   #working with wrong output, the sum
                     ranking.add(item, self.score(user,item))
             userRatings[user] = ranking.__repr__()
         return userRatings
+
+# class ItemNNRecommender(Recommender):
+#     def __init__(self, ratings, sim, k):
+#         super().__init__(ratings)
+#         self.sim = sim
+#         self.k = k
+#     def score(self, user, item):
+#         similarities = []
+#         for user2 in self.training.itemDict[item].keys():
+#             similarities.append([self.sim.sim(user,user2),user2])
+#         similarities.sort(key=lambda tup: tup[0], reverse=True)
+#         #TODO for the first example is ok, but how we're handling the first top k element?   #for tup in similarities[:k]:   
+#         return sum(simv * self.training.itemDict[item][v] for simv, v in similarities) 
     
+#     def recommend(self,topn):
+#         itemRatings = {}
+#         for item in self.training.itemDict.keys():
+#             ranking = Ranking(topn)
+#             for user in self.training.userDict.keys():
+#                 if user not in self.training.itemDict[item].keys():
+#                     ranking.add(user, self.score(user,item))
+#             itemRatings[item] = ranking.__repr__()
+#         return itemRatings
+
+
+class ItemSimilarity(ABC):
+    def __init__(self, training):
+        self.training = training
+    @abstractmethod
+    def itemSim(self, item1, item2):
+        """ Computation of item-item similarity metric """
+
+class CosineItemSimilarity(ItemSimilarity):
+    def itemSim(self, item1, item2):
+        num = 0
+        x = 0
+        den = 0
+        den1 = 0
+        den2 = 0
+        users = []
+        for user in self.training.itemDict[item1].keys():
+            if user in self.training.itemDict[item2].keys():
+                users.append(user)
+        for user in users:
+            num += self.training.itemDict[item1][user] * self.training.itemDict[item2][user]
+        for user in self.training.itemDict[item1].keys():
+            x = (self.training.itemDict[item1][user]) * (self.training.itemDict[item1][user])
+            den1 += x
+        for user in self.training.itemDict[item2].keys():
+            x = (self.training.itemDict[item2][user]) * (self.training.itemDict[item2][user])
+            den2 += x
+        if den1 == 0 or den2 == 0:
+            return 0
+        return num / (float(den) ** 0.5)
+
 class UserSimilarity(ABC):
     def __init__(self, training):
         self.training = training
@@ -269,27 +323,27 @@ class UserSimilarity(ABC):
 
 class CosineUserSimilarity(UserSimilarity):
     def sim(self, user1, user2):
-        sum=0
-        x=0
-        div=0
-        div1=0
-        div2=0
+        num = 0
+        x = 0
+        den = 0
+        den1 = 0
+        den2 = 0
         items = []
         for item in self.training.userDict[user1].keys():
             if item in self.training.userDict[user2].keys():
                 items.append(item)
         for item in items:
-            sum += self.training.userDict[user1][item] * self.training.userDict[user2][item]
+            num += self.training.userDict[user1][item] * self.training.userDict[user2][item]
         for item in self.training.userDict[user1].keys():
-            x = (self.training.userDict[user1][item])*(self.training.userDict[user1][item]) #** 2
-            div1 += x
+            x = (self.training.userDict[user1][item]) * (self.training.userDict[user1][item]) #** 2
+            den1 += x
         for item in self.training.userDict[user2].keys():
-            x = (self.training.userDict[user2][item])*(self.training.userDict[user2][item]) #** 2
-            div2 += x
-        div=div1*div2
-        if div1 == 0 or div2 == 0:
+            x = (self.training.userDict[user2][item]) * (self.training.userDict[user2][item]) #** 2
+            den2 += x
+        den = den1 * den2
+        if den1 == 0 or den2 == 0:
             return 0
-        return sum / (float(div) ** 0.5)
+        return num / (float(den) ** 0.5)
     
 
 class Metric(ABC):
