@@ -10,7 +10,7 @@
 
 import heapq
 import random
-import math 
+from math import exp 
 from abc import ABC, abstractmethod
 
 
@@ -235,7 +235,7 @@ class NormUserKNNRecommender(Recommender):   #working with wrong output, the sum
         x=0
         similarities = []
         for user2 in self.training.itemDict[item].keys():
-            if len(self.training.userDict[user2].keys()) >= self.k:
+            if len(self.training.userDict[user2].keys()) >= self.min:  #was self.k
                 similarities.append([self.sim.sim(user,user2),user2])
                 #print('similarity between user',user,'and user',user2, 'is',self.sim.sim(user,user2) )   debugging, please leave it here unless you don't fix it
                 x += self.sim.sim(user,user2)  #sum of all the similarities(referring to only one item)
@@ -260,28 +260,28 @@ class NormUserKNNRecommender(Recommender):   #working with wrong output, the sum
             userRatings[user] = ranking.__repr__()
         return userRatings
 
-# class ItemNNRecommender(Recommender):
-#     def __init__(self, ratings, sim, k):
-#         super().__init__(ratings)
-#         self.sim = sim
-#         self.k = k
-#     def score(self, user, item):
-#         similarities = []
-#         for user2 in self.training.itemDict[item].keys():
-#             similarities.append([self.sim.sim(user,user2),user2])
-#         similarities.sort(key=lambda tup: tup[0], reverse=True)
-#         #TODO for the first example is ok, but how we're handling the first top k element?   #for tup in similarities[:k]:   
-#         return sum(simv * self.training.itemDict[item][v] for simv, v in similarities) 
+class ItemNNRecommender(Recommender):
+    def __init__(self, ratings, sim, k):
+        super().__init__(ratings)
+        self.sim = sim
+        self.k = k
+    def score(self, user, item):
+        similarities = []
+        for user2 in self.training.itemDict[item].keys():
+            similarities.append([self.sim.sim(user,user2),user2])
+        similarities.sort(key=lambda tup: tup[0], reverse=True)
+        #TODO for the first example is ok, but how we're handling the first top k element?   #for tup in similarities[:k]:   
+        return sum(simv * self.training.itemDict[item][v] for simv, v in similarities) 
     
-#     def recommend(self,topn):
-#         itemRatings = {}
-#         for item in self.training.itemDict.keys():
-#             ranking = Ranking(topn)
-#             for user in self.training.userDict.keys():
-#                 if user not in self.training.itemDict[item].keys():
-#                     ranking.add(user, self.score(user,item))
-#             itemRatings[item] = ranking.__repr__()
-#         return itemRatings
+    def recommend(self,topn):
+        itemRatings = {}
+        for item in self.training.itemDict.keys():
+            ranking = Ranking(topn)
+            for user in self.training.userDict.keys():
+                if user not in self.training.itemDict[item].keys():
+                    ranking.add(user, self.score(user,item))
+            itemRatings[item] = ranking.__repr__()
+        return itemRatings
 
 
 class ItemSimilarity(ABC):
@@ -305,10 +305,10 @@ class CosineItemSimilarity(ItemSimilarity):
         for user in users:
             num += self.training.itemDict[item1][user] * self.training.itemDict[item2][user]
         for user in self.training.itemDict[item1].keys():
-            x = (self.training.itemDict[item1][user]) * (self.training.itemDict[item1][user])
+            x = float(self.training.itemDict[item1][user]) ** 2
             den1 += x
         for user in self.training.itemDict[item2].keys():
-            x = (self.training.itemDict[item2][user]) * (self.training.itemDict[item2][user])
+            x = float(self.training.itemDict[item2][user]) ** 2
             den2 += x
         if den1 == 0 or den2 == 0:
             return 0
@@ -335,10 +335,42 @@ class CosineUserSimilarity(UserSimilarity):
         for item in items:
             num += self.training.userDict[user1][item] * self.training.userDict[user2][item]
         for item in self.training.userDict[user1].keys():
-            x = (self.training.userDict[user1][item]) * (self.training.userDict[user1][item]) #** 2
+            x = float(self.training.userDict[user1][item]) ** 2 
             den1 += x
         for item in self.training.userDict[user2].keys():
-            x = (self.training.userDict[user2][item]) * (self.training.userDict[user2][item]) #** 2
+            x = float(self.training.userDict[user2][item]) ** 2 
+            den2 += x
+        den = den1 * den2
+        if den1 == 0 or den2 == 0:
+            return 0
+        return num / (float(den) ** 0.5)
+
+class PearsonUserSimilarity(UserSimilarity):
+    def sim(self, user1, user2):
+        num = 0
+        x = 0
+        den = 0
+        den1 = 0
+        den2 = 0
+        items = []
+        avg1 = 0
+        avg2 = 0
+        for item in self.training.userDict[user1].keys():
+            avg1 += self.training.userDict[user1][item]
+        avg1 = avg1 / len(self.training.userDict[user1].keys())
+        for item in self.training.userDict[user2].keys():
+            avg2 += self.training.userDict[user2][item]
+        avg2 = avg2 / len(self.training.userDict[user2].keys())
+        for item in self.training.userDict[user1].keys():
+            if item in self.training.userDict[user2].keys():
+                items.append(item)
+        for item in items:
+            num += (self.training.userDict[user1][item] - avg1) * (self.training.userDict[user2][item] - avg2)
+        for item in self.training.userDict[user1].keys():
+            x = float(self.training.userDict[user1][item] - avg1) ** 2 
+            den1 += x
+        for item in self.training.userDict[user2].keys():
+            x = float(self.training.userDict[user2][item] - avg2) ** 2
             den2 += x
         den = den1 * den2
         if den1 == 0 or den2 == 0:
@@ -359,3 +391,6 @@ class Metric(ABC):
     # subclases - a criterio del estudiante.
     def compute(self, recommendation):
         """ Completar """
+
+def student_test():
+    pass
