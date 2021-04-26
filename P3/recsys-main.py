@@ -28,8 +28,8 @@ def main():
 def toy_test(dataset, separator='\t'):
     training = Ratings(dataset + "-train.dat", separator)
     test = Ratings(dataset + "-test.dat", separator)
-    # metrics = [Precision(test, cutoff=4, threshold=4), Recall(test, cutoff=4, threshold=4)]
-    # evaluate_recommenders(training, metrics, k=4, min=2, topn=4)
+    #metrics = [Precision(test, cutoff=4, threshold=4), Recall(test, cutoff=4, threshold=4)]
+    #evaluate_recommenders(training, metrics, k=4, min=2, topn=4)
 
 
 # More complete testing on a generic dataset
@@ -67,10 +67,10 @@ def test_recommenders(ratings, k, min, topn):
     timer(start)
     start = time.process_time()
     print("Creating kNN recommender")
-    knn = UserKNNRecommender(ratings, sim, k)  #knn = ItemNNRecommender(ratings, sim, k)
+    knn = UserKNNRecommender(ratings, sim, k)
     timer(start)
     start = time.process_time()
-    test_recommender(UserKNNRecommender(ratings, sim, k), topn)  #test_recommender(ItemNNRecommender(ratings, sim, k), topn)
+    test_recommender(knn, topn)
     timer(start)
     start = time.process_time()
     test_recommender(NormUserKNNRecommender(ratings, sim, k, min), topn)
@@ -93,7 +93,7 @@ def evaluate_recommenders(training, metrics, k, min, topn):
     evaluate_recommender(MajorityRecommender(training, threshold=4), topn, metrics)
     evaluate_recommender(AverageRecommender(training, min), topn, metrics)
     sim = CosineUserSimilarity(training)
-    knn = UserKNNRecommender(training, sim, k)   #knn = ItemNNRecommender(training, sim, k)
+    knn = UserKNNRecommender(training, sim, k)
     evaluate_recommender(knn, topn, metrics)
     evaluate_recommender(NormUserKNNRecommender(training, sim, k, min), topn, metrics)
 

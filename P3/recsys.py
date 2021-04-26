@@ -10,7 +10,7 @@
 
 import heapq
 import random
-from math import exp 
+import math 
 from abc import ABC, abstractmethod
 
 
@@ -173,6 +173,7 @@ class AverageRecommender(Recommender):
 class RandomRecommender(Recommender):
     def score(self, user, item):
         return random.random()
+    
     def recommend(self,topn):
         userRatings = {}
         for user in self.training.userDict.keys():
@@ -207,6 +208,7 @@ class UserKNNRecommender(Recommender):
         super().__init__(ratings)
         self.sim = sim
         self.k = k
+    
     def score(self, user, item):
         similarities = []
         for user2 in self.training.itemDict[item].keys():
@@ -231,6 +233,7 @@ class NormUserKNNRecommender(Recommender):   #working with wrong output, the sum
         self.sim = sim
         self.k = k
         self.min = min
+    
     def score(self, user, item):
         x=0
         similarities = []
@@ -265,6 +268,7 @@ class ItemNNRecommender(Recommender):
         super().__init__(ratings)
         self.sim = sim
         self.k = k
+    
     def score(self, user, item):
         similarities = []
         for user2 in self.training.itemDict[item].keys():
@@ -329,18 +333,23 @@ class CosineUserSimilarity(UserSimilarity):
         den1 = 0
         den2 = 0
         items = []
+        
         for item in self.training.userDict[user1].keys():
             if item in self.training.userDict[user2].keys():
                 items.append(item)
+        
         for item in items:
             num += self.training.userDict[user1][item] * self.training.userDict[user2][item]
+        
         for item in self.training.userDict[user1].keys():
             x = float(self.training.userDict[user1][item]) ** 2 
             den1 += x
+        
         for item in self.training.userDict[user2].keys():
             x = float(self.training.userDict[user2][item]) ** 2 
             den2 += x
         den = den1 * den2
+        
         if den1 == 0 or den2 == 0:
             return 0
         return num / (float(den) ** 0.5)
@@ -355,24 +364,31 @@ class PearsonUserSimilarity(UserSimilarity):
         items = []
         avg1 = 0
         avg2 = 0
+
         for item in self.training.userDict[user1].keys():
             avg1 += self.training.userDict[user1][item]
         avg1 = avg1 / len(self.training.userDict[user1].keys())
+        
         for item in self.training.userDict[user2].keys():
             avg2 += self.training.userDict[user2][item]
         avg2 = avg2 / len(self.training.userDict[user2].keys())
+        
         for item in self.training.userDict[user1].keys():
             if item in self.training.userDict[user2].keys():
                 items.append(item)
+        
         for item in items:
             num += (self.training.userDict[user1][item] - avg1) * (self.training.userDict[user2][item] - avg2)
+        
         for item in self.training.userDict[user1].keys():
             x = float(self.training.userDict[user1][item] - avg1) ** 2 
             den1 += x
+        
         for item in self.training.userDict[user2].keys():
             x = float(self.training.userDict[user2][item] - avg2) ** 2
             den2 += x
         den = den1 * den2
+        
         if den1 == 0 or den2 == 0:
             return 0
         return num / (float(den) ** 0.5)
@@ -390,7 +406,47 @@ class Metric(ABC):
     # pero también se puede meter algo de código aquí y el resto en las
     # subclases - a criterio del estudiante.
     def compute(self, recommendation):
-        """ Completar """
+        return len(self.test.userDict.keys())
+    
+class Precision(Metric):
+    def __init__(self, test, cutoff, threshold):
+        self.test = test
+        self.threshold = threshold
+        self.cutoff = cutoff
+
+    def compute(self, recommendation):
+        noUsers = super.compute()
+        userP = 0
+        for user in recommendation.keys():
+
+            items = [item for item in recommendation[user].split(" ")]
+            numerator = 0
+            ratings = []
+            for item in self.test.userDict[user].keys():
+                ratings.append([item, self.test.userDict[user][item]])
+
+            ratings.sort(key=lambda tup: tup[1], reverse=True)
+
+            for item, _ in ratings[:self.cutoff]:
+                if item in items:
+                    numerator += 1
+            
+            userP += numerator / self.cutoff
+
+        return userP / noUsers
+
+
+class Recall(Metric):
+    def __init__(self, test, cutoff, threshold):
+        self.test = test
+        self.threshold = threshold
+        self.cutoff = cutoff 
+
+    def compute(self, recommendation):
+        noUsers = super.compute()
+        pass
+
+
 
 def student_test():
     pass
