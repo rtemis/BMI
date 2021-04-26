@@ -214,8 +214,11 @@ class UserKNNRecommender(Recommender):
         for user2 in self.training.itemDict[item].keys():
             similarities.append([self.sim.sim(user,user2),user2])
         similarities.sort(key=lambda tup: tup[0], reverse=True)
+
         #TODO for the first example is ok, but how we're handling the first top k element?   #for tup in similarities[:k]:   
+        
         return sum(simv * self.training.itemDict[item][v] for simv, v in similarities) 
+    
     
     def recommend(self,topn):
         userRatings = {}
@@ -227,7 +230,7 @@ class UserKNNRecommender(Recommender):
             userRatings[user] = ranking.__repr__()
         return userRatings
 
-class NormUserKNNRecommender(Recommender):   #working with wrong output, the sum of the similarities it's <1 and all the NORMrecommendations are higher than the NOT-NORMrecommendations( they shoud be all lower).
+class NormUserKNNRecommender(Recommender):  
     def __init__(self, ratings, sim, k, min):
         super().__init__(ratings)
         self.sim = sim
@@ -235,20 +238,18 @@ class NormUserKNNRecommender(Recommender):   #working with wrong output, the sum
         self.min = min
     
     def score(self, user, item):
-        x=0
+        x = 0
+        count = 0
         similarities = []
         for user2 in self.training.itemDict[item].keys():
-            if len(self.training.userDict[user2].keys()) >= self.min:  #was self.k
-                similarities.append([self.sim.sim(user,user2),user2])
-                #print('similarity between user',user,'and user',user2, 'is',self.sim.sim(user,user2) )   debugging, please leave it here unless you don't fix it
-                x += self.sim.sim(user,user2)  #sum of all the similarities(referring to only one item)
-            else:
-                similarities.append([0,user2])
-        #print('244',user, x)   debugging, please leave it here unless you don't fix it
+            if user2 != user and (self.sim.sim(user,user2)!=0):
+                count +=1
+        if count < self.min:
+            return 0
+        for user2 in self.training.itemDict[item].keys():
+            similarities.append([self.sim.sim(user,user2),user2])
+            x += self.sim.sim(user,user2)  #sum of all the similarities(referring to only one item)
         similarities.sort(key=lambda tup: tup[0], reverse=True)
-        
-        #for simv, v in similarities:
-            #print('248',simv,self.training.itemDict[item][v],v,item)  debugging, please leave it here unless you don't fix it
         if x == 0:
             return (sum(simv * self.training.itemDict[item][v] for simv, v in similarities))  
         return (sum(simv * self.training.itemDict[item][v] for simv, v in similarities)) / x  #normalizing for that sum, if I sum all the "simv" parameters it's the same result
