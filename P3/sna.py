@@ -21,18 +21,32 @@ class UndirectedSocialNetwork:
         """ Completar """
 
     def contacts(self, user):
+        return self.friendshipDict[user]
         """ Completar """
 
     def degree(self, user):
         """ Completar """
 
     def add_contact(self, u, v):
+        if u not in self.friendshipDict.keys():
+                    self.friendshipDict[u] = {}
+                self.friendshipDict[u] = v
+                if v not in self.friendshipDict.keys():
+                    self.friendshipDict[v] = {}
+                self.friendshipDict[v] = u
         """ Completar """
 
     def connected(self, u, v):
+        if u in self.friendshipDict[v]:
+            return 1 #connected
+        else:
+            return 0
         """ Completar """
 
     def nedges(self):
+        for u in self.friendshipDict.keys():
+            for v in self.friendshipDict.keys():
+                if u in
         """ Completar """
 
 
