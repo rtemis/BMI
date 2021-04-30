@@ -4,9 +4,20 @@ from abc import ABC, abstractmethod
 
 class UndirectedSocialNetwork:
     def __init__(self, file, delimiter='\t', parse=0):
+        self.friendshipDict = {}   #redundant but necessary structure.. if a and b are friends ->  fDict[a] = {b}    fDict[b] = {a}
+        fp = open(file, "r")
+        for line in fp.readlines():
+                d = line.split(delimiter)
+                if (d[0]) not in self.friendshipDict.keys():
+                    self.friendshipDict[d[0]] = {}
+                self.friendshipDict[d[0]] = d[1]
+                if (d[1]) not in self.friendshipDict.keys():
+                    self.friendshipDict[d[1]] = {}
+                self.friendshipDict[d[1]] = d[0]
         """ Completar """
 
     def users(self):
+        return self.friendshipDict.keys()
         """ Completar """
 
     def contacts(self, user):
