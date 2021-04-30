@@ -29,11 +29,11 @@ class UndirectedSocialNetwork:
 
     def add_contact(self, u, v):
         if u not in self.friendshipDict.keys():
-                    self.friendshipDict[u] = {}
-                self.friendshipDict[u] = v
-                if v not in self.friendshipDict.keys():
-                    self.friendshipDict[v] = {}
-                self.friendshipDict[v] = u
+            self.friendshipDict[u] = {}
+        self.friendshipDict[u] = v
+        if v not in self.friendshipDict.keys():
+            self.friendshipDict[v] = {}
+        self.friendshipDict[v] = u
         """ Completar """
 
     def connected(self, u, v):
