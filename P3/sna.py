@@ -44,9 +44,12 @@ class UndirectedSocialNetwork:
         """ Completar """
 
     def nedges(self):
+        count = 0
         for u in self.friendshipDict.keys():
             for v in self.friendshipDict.keys():
-                if u in
+                if u in self.friendshipDict[v]:
+                    count += 1
+        return count / 2
         """ Completar """
 
 
