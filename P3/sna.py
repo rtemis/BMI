@@ -8,13 +8,10 @@ class UndirectedSocialNetwork:
         self.friendshipDict = {}   #redundant but necessary structure.. if a and b are friends ->  fDict[a] = {b}    fDict[b] = {a}
         fp = open(file, "r")
         for line in fp.readlines():
-                d = line.split(delimiter)
-                if (d[0]) not in self.friendshipDict.keys():
-                    self.friendshipDict[d[0]] = {}
-                self.friendshipDict[d[0]] = d[1]
-                if (d[1]) not in self.friendshipDict.keys():
-                    self.friendshipDict[d[1]] = {}
-                self.friendshipDict[d[1]] = d[0]
+            d = line.split(delimiter)
+            d[1] = d[1].strip('\n')
+            self.add_contact(int(d[0]), int(d[1]))
+        print(self.friendshipDict)
 
     def users(self):
         return self.friendshipDict.keys()
@@ -27,11 +24,12 @@ class UndirectedSocialNetwork:
 
     def add_contact(self, u, v):
         if u not in self.friendshipDict.keys():
-            self.friendshipDict[u] = {}
-        self.friendshipDict[u] = v
+            self.friendshipDict[u] = []
         if v not in self.friendshipDict.keys():
-            self.friendshipDict[v] = {}
-        self.friendshipDict[v] = u
+            self.friendshipDict[v] = []
+
+        self.friendshipDict[u].append(v)        
+        self.friendshipDict[v].append(u)
 
     def connected(self, u, v):
         return (u in self.friendshipDict[v])
@@ -62,6 +60,29 @@ class LocalMetric(Metric):
     def compute(self, network, element):
         """" Compute metric on one user of edge of network """
 
+class UserClusteringCoefficient(LocalMetric):
+    def __init__(self, topn):
+        self.topn = topn
+        self.ranking = Ranking(topn)    
+
+    def compute(self, network, element):
+        count = 0
+        for u in network.contacts(element):
+            for v in network.contacts(element):
+                if network.connected(u,v):
+                    count += 1
+        count /= 2
+        return count / ((len(network.contacts(element)) * (len(network.contacts(element))-1)) / 2) 
+    
+    def compute_all(self, network):
+        for user in network.friendshipDict.keys():
+            self.ranking.add(user, self.compute(network, user))
+        return self.ranking.__repr__()
+    
+
+class ClusteringCoefficient(Metric):
+    def compute_all(self, network):
+        pass
 
 class Ranking:
     class ScoredUser:
