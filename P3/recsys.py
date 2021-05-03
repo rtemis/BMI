@@ -212,6 +212,7 @@ class UserKNNRecommender(Recommender):
     def score(self, user, item):
         similarities = []
         for user2 in self.training.itemDict[item].keys():
+            #print('sim of user', user, 'with user', user2, self.sim.sim(user,user2))
             similarities.append([self.sim.sim(user,user2),user2])
         similarities.sort(key=lambda tup: tup[0], reverse=True)
 
@@ -350,7 +351,6 @@ class CosineUserSimilarity(UserSimilarity):
             x = float(self.training.userDict[user2][item]) ** 2 
             den2 += x
         den = den1 * den2
-        
         if den1 == 0 or den2 == 0:
             return 0
         return num / (float(den) ** 0.5)
@@ -381,15 +381,15 @@ class PearsonUserSimilarity(UserSimilarity):
         for item in items:
             num += (self.training.userDict[user1][item] - avg1) * (self.training.userDict[user2][item] - avg2)
         
-        for item in self.training.userDict[user1].keys():
+        for item in items: #self.training.userDict[user1].keys():
             x = float(self.training.userDict[user1][item] - avg1) ** 2 
             den1 += x
         
-        for item in self.training.userDict[user2].keys():
+        for item in items: #self.training.userDict[user2].keys():
             x = float(self.training.userDict[user2][item] - avg2) ** 2
             den2 += x
         den = den1 * den2
-        
+        #print(user1,user2,num,den)
         if den1 == 0 or den2 == 0:
             return 0
         return num / (float(den) ** 0.5)

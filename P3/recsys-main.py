@@ -63,7 +63,7 @@ def test_recommenders(ratings, k, min, topn):
     timer(start)
     start = time.process_time()
     print("Creating user cosine similarity")
-    sim = CosineUserSimilarity(ratings)   #sim = PearsonUserSimilarity(ratings)   #sim = CosineUserSimilarity(ratings)
+    sim = PearsonUserSimilarity(ratings)   #sim = PearsonUserSimilarity(ratings)   #sim = CosineUserSimilarity(ratings)
     timer(start)
     start = time.process_time()
     print("Creating kNN recommender")
