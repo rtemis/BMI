@@ -217,7 +217,6 @@ class UserKNNRecommender(Recommender):
         similarities.sort(key=lambda tup: tup[0], reverse=True)
 
         #TODO for the first example is ok, but how we're handling the first top k element?   #for tup in similarities[:k]:   
-        
         return sum(simv * self.training.itemDict[item][v] for simv, v in similarities) 
     
     
@@ -318,6 +317,7 @@ class CosineItemSimilarity(ItemSimilarity):
             den2 += x
         if den1 == 0 or den2 == 0:
             return 0
+        den = den1 * den2
         return num / (float(den) ** 0.5)
 
 class UserSimilarity(ABC):
