@@ -1,4 +1,5 @@
 import heapq
+import networkx
 from abc import ABC, abstractmethod
 
 
@@ -14,18 +15,15 @@ class UndirectedSocialNetwork:
                 if (d[1]) not in self.friendshipDict.keys():
                     self.friendshipDict[d[1]] = {}
                 self.friendshipDict[d[1]] = d[0]
-        """ Completar """
 
     def users(self):
         return self.friendshipDict.keys()
-        """ Completar """
 
     def contacts(self, user):
         return self.friendshipDict[user]
-        """ Completar """
 
     def degree(self, user):
-        """ Completar """
+        return len(self.friendshipDict[user])
 
     def add_contact(self, u, v):
         if u not in self.friendshipDict.keys():
@@ -34,14 +32,9 @@ class UndirectedSocialNetwork:
         if v not in self.friendshipDict.keys():
             self.friendshipDict[v] = {}
         self.friendshipDict[v] = u
-        """ Completar """
 
     def connected(self, u, v):
-        if u in self.friendshipDict[v]:
-            return 1 #connected
-        else:
-            return 0
-        """ Completar """
+        return (u in self.friendshipDict[v])
 
     def nedges(self):
         count = 0
@@ -50,7 +43,6 @@ class UndirectedSocialNetwork:
                 if u in self.friendshipDict[v]:
                     count += 1
         return count / 2
-        """ Completar """
 
 
 class Metric(ABC):
