@@ -99,10 +99,14 @@ class Assortativity(Metric):
         num1 = 0
         second_term = 0
         den1 = 0
+        #TODO num1
         for user in network.users():
             second_term += (network.degree(user)) ** 2
         second_term = second_term ** 2
         for user in network.users():
+            den1 += (network.degree(user)) ** 3
+        den1 *= 2 * network.nedges
+        return (num1 - second_term) / (den1 - second_term)
 
 
 class Ranking:
