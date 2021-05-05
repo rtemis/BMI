@@ -84,6 +84,27 @@ class ClusteringCoefficient(Metric):
     def compute_all(self, network):
         pass
 
+class Embeddedness(Metric):
+    def compute(self, network, element):
+        u1 = element[0]
+        u2 = element[1]
+        neighbors = []
+        for user in network.contacts(u1):
+            if user in network.contacts(u2):
+                neighbors.append(user)
+        return len(neighbors) / (len(network.contacts(u2)) + len(network.contacts(u1)) - 2) 
+
+class Assortativity(Metric):
+    def compute(self, network):
+        num1 = 0
+        second_term = 0
+        den1 = 0
+        for user in network.users():
+            second_term += (network.degree(user)) ** 2
+        second_term = second_term ** 2
+        for user in network.users():
+
+
 class Ranking:
     class ScoredUser:
         """
