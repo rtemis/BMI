@@ -11,6 +11,8 @@
 import heapq
 import random
 import math 
+import itertools
+
 from abc import ABC, abstractmethod
 
 
@@ -293,11 +295,11 @@ class ItemSimilarity(ABC):
     def __init__(self, training):
         self.training = training
     @abstractmethod
-    def itemSim(self, item1, item2):
+    def sim(self, item1, item2):
         """ Computation of item-item similarity metric """
 
 class CosineItemSimilarity(ItemSimilarity):
-    def itemSim(self, item1, item2):
+    def sim(self, item1, item2):
         num = 0
         x = 0
         den = 0
@@ -450,4 +452,30 @@ class Recall(Metric):
 
 
 def student_test():
-    pass
+    def test_dataset(recommender, topn):
+        print("Testing", recommender, "(top", str(topn) + ")")
+        recommendation = recommender.recommend(topn)
+        for user in itertools.islice(recommendation, 4):
+            print("    User", user, "->", recommendation[user])
+    # def test_dataset(ratings_file, user, item, k, min, topn, cutoff, delimiter='\t'):
+    ratings = Ratings("data/toy-ratings.dat", '\t') 
+    
+    user = 1
+    item = 2
+    k = 4 
+    min = 2
+    topn = 4
+    cutoff = 4
+
+    print("Creating Pearson User Similarity")
+    sim = PearsonUserSimilarity(ratings) 
+    test_dataset(UserKNNRecommender(ratings, sim, k), topn)
+    
+    print("Creating Cosine Item Similarity")
+    sim = CosineItemSimilarity(ratings)
+    test_dataset(ItemNNRecommender(ratings, sim, k), topn)
+
+    test_dataset(MajorityRecommender(ratings, threshold=4), topn)
+    test_dataset(AverageRecommender(ratings, min), topn)
+
+student_test()
