@@ -75,14 +75,32 @@ class UserClusteringCoefficient(LocalMetric):
         return count / ((len(network.contacts(element)) * (len(network.contacts(element))-1)) / 2) 
     
     def compute_all(self, network):
-        for user in network.friendshipDict.keys():
+        for user in network.users():
             self.ranking.add(user, self.compute(network, user))
         return self.ranking.__repr__()
     
 
 class ClusteringCoefficient(Metric):
     def compute_all(self, network):
-        pass
+        num = 0
+        den = 0
+        for user in network.users():
+            for contact in network.contacts(user):
+                if user in network.contacts(contact):
+                    den += 1
+                else:
+                    num += 1
+        return num / den
+
+
+class AvgUserMetric(Metric):
+    def compute(self, metric, network):
+        self.metric = metric
+        count = 0
+        for user in network.users():
+            count += metric(user)
+        return count / len(network.users())
+
 
 class Embeddedness(Metric):
     def compute(self, network, element):
@@ -100,6 +118,10 @@ class Assortativity(Metric):
         second_term = 0
         den1 = 0
         #TODO num1
+        for user in network.users():
+            for contact in network.contacts(user):
+                num1 += network.degree(user) * network.degree(contact)
+        num1 *= 2 * network.nedges
         for user in network.users():
             second_term += (network.degree(user)) ** 2
         second_term = second_term ** 2
