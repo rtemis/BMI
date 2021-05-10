@@ -111,7 +111,7 @@ class Embeddedness(Metric):
 
     def compute(self, network, element):
         #self.element = element
-        print(element)
+        #print(element)
         u1 = element[0]
         u2 = element[1]
         neighbors = []
