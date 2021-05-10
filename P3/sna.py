@@ -10,8 +10,8 @@ class UndirectedSocialNetwork:
         for line in fp.readlines():
             d = line.split(delimiter)
             d[1] = d[1].strip('\n')
-            self.add_contact(int(d[0]), int(d[1]))
-        print(self.friendshipDict)
+            self.add_contact(int(d[0]),int(d[1]))
+        #print(self.friendshipDict)
 
     def users(self):
         return self.friendshipDict.keys()
@@ -62,6 +62,7 @@ class LocalMetric(Metric):
 
 class UserClusteringCoefficient(LocalMetric):
     def __init__(self, topn):
+    #def __init__():
         self.topn = topn
         self.ranking = Ranking(topn)    
 
@@ -86,14 +87,15 @@ class ClusteringCoefficient(Metric):
         den = 0
         for user in network.users():
             for contact in network.contacts(user):
-                if user in network.contacts(contact):
-                    den += 1
-                else:
-                    num += 1
+                for common in network.contacts(contact):
+                    if network.connected(user,common):
+                        num += 1
+                    else:
+                        den += 1
         return num / den
 
 
-class AvgUserMetric(Metric):
+class AvgUserMetric():
     def compute(self, metric, network):
         self.metric = metric
         count = 0
@@ -103,7 +105,13 @@ class AvgUserMetric(Metric):
 
 
 class Embeddedness(Metric):
+    def __init__(self, topn):
+        self.topn = topn
+        self.ranking = Ranking(topn) 
+
     def compute(self, network, element):
+        #self.element = element
+        print(element)
         u1 = element[0]
         u2 = element[1]
         neighbors = []
@@ -111,23 +119,27 @@ class Embeddedness(Metric):
             if user in network.contacts(u2):
                 neighbors.append(user)
         return len(neighbors) / (len(network.contacts(u2)) + len(network.contacts(u1)) - 2) 
+    
+    def compute_all(self, network):
+        for user in network.users():
+            self.ranking.add(user, self.compute(network, user))
+        return self.ranking.__repr__()
 
 class Assortativity(Metric):
-    def compute(self, network):
+    def compute_all(self, network):
         num1 = 0
         second_term = 0
         den1 = 0
-        #TODO num1
         for user in network.users():
             for contact in network.contacts(user):
                 num1 += network.degree(user) * network.degree(contact)
-        num1 *= 2 * network.nedges
+        num1 = 2 * network.nedges() * num1
         for user in network.users():
             second_term += (network.degree(user)) ** 2
         second_term = second_term ** 2
         for user in network.users():
             den1 += (network.degree(user)) ** 3
-        den1 *= 2 * network.nedges
+        den1 = 2 * network.nedges() * den1
         return (num1 - second_term) / (den1 - second_term)
 
 
